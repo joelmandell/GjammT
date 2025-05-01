@@ -1,5 +1,5 @@
 ﻿namespace GjammT.CustomerRegister;
 
-public class Class1
+public sealed class CustomerService
 {
 }

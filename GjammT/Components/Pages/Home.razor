@@ -1,7 +1,18 @@
 ﻿@page "/"
-
+@using GjammT.Auth
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ILoginService LoginService;
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<AuthorizeView>
+    <Authorized>
+        
+    </Authorized>
+    <NotAuthorized>
+        Login form TBD
+    </NotAuthorized>
+</AuthorizeView>
 
-Welcome to your new app.
+@{
+    
+}

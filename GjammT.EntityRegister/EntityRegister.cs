@@ -1,5 +1,5 @@
 ﻿namespace GjammT.EntityRegister;
 
-public class Class1
+public sealed class EntityRegister
 {
 }

@@ -1,8 +1,13 @@
+using GjammT.Auth;
 using GjammT.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddSingleton<ILoginService, LoginService>();
+builder.Services.AddAuthorizationCore();
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAuthenticationStateDeserialization();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 

@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\GjammT.Models\GjammT.Models.csproj" />
+    </ItemGroup>
+
 </Project>
