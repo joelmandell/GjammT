@@ -1,4 +1,7 @@
-﻿@using GjammT.Models
+﻿@using System.Reflection
+@using System.Runtime.Loader
+@using GjammT.Models
+@using GjammT.Models.UI
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">GjammT</a>
@@ -16,6 +19,40 @@
             <NavLink class="nav-link" href="/AccessSystems" Match="NavLinkMatch.All">
                 <span class="bi bi-key-fill-nav-menu" aria-hidden="true"></span> @Resources.ACCESS_SYSTEM
             </NavLink>
+            @uiName
         </div>
     </nav>
 </div>
+
+@code {
+    private string uiName { get; set; }
+    private AssemblyLoadContext? _loadContext;
+    
+    protected override void OnInitialized()
+    {
+        Unload();
+
+        string dllPath = "/Users/joelmandell/RiderProjects/GjammT/GjammT.CustomerRegister/bin/Debug/net9.0/GjammT.CustomerRegister.dll";
+        _loadContext = new PluginLoadContext(dllPath);
+        var bytes = File.ReadAllBytes(dllPath);
+
+        var fileAssembly = _loadContext.LoadFromStream(new MemoryStream(bytes));
+        
+        var uiDeclaration = fileAssembly.GetTypes().First(x => x.BaseType == typeof(BaseDefinition));
+        var uiDeclareInstance = (BaseDefinition?)Activator.CreateInstance(uiDeclaration);
+        uiName = uiDeclareInstance?.ResourceName ?? "NOT FOUND";
+        base.OnInitialized();
+    }
+    
+    public void Unload()
+    {
+        if (_loadContext != null)
+        {
+            _loadContext.Unload();
+            _loadContext = null;
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+    }
+}
