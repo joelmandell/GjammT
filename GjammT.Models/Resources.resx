@@ -24,4 +24,22 @@
     <data name="CUSTOMER_REGISTER" xml:space="preserve">
         <value>Kundregister</value>
     </data>
+    <data name="USERNAME" xml:space="preserve">
+        <value>Användarnamn</value>
+    </data>
+    <data name="PASSWORD" xml:space="preserve">
+        <value>Lösenord</value>
+    </data>
+    <data name="ENTER_USERNAME" xml:space="preserve">
+        <value>Skriv in ditt användarnamn</value>
+    </data>
+    <data name="ENTER_PASSWORD" xml:space="preserve">
+        <value>Skriv in ditt lösenord</value>
+    </data>
+    <data name="SIGNIN" xml:space="preserve">
+        <value>Logga in</value>
+    </data>
+    <data name="SIGNOUT" xml:space="preserve">
+        <value>Logga ut</value>
+    </data>
 </root>

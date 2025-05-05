@@ -1,0 +1,42 @@
+@using GjammT.Models
+@using GjammT.Models.Auth
+
+<section class="bg-gray-50 dark:bg-gray-950">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md rounded-lg px-4 py-14 md:px-6 md:py-20">
+            <div class="flex justify-center mb-6">
+                <h2 class="text-center text-gray-900 dark:text-white text-xl font-semibold">@ProgramInfo.Name (@ProgramInfo.Version)</h2>
+            </div>
+            <h2 class="text-2xl font-semibold text-gray-900 dark:text-white text-center mb-2">@Resources.SIGNIN</h2>
+            <form method="post" action="/auth/signin">
+                <AntiforgeryToken/>
+                <div class="mb-4">
+                    <label for="username" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">@Resources.USERNAME</label>
+                    <SfTextBox ID="username" @bind-Value="LoginModel.UserName" CssClass="e-bigger" Type="InputType.Text" Placeholder=@Resources.USERNAME
+                               FloatLabelType="FloatLabelType.Never" aria-label=@Resources.ENTER_USERNAME name="LoginModel.UserName"
+                               role="textbox"></SfTextBox>
+                </div>
+                <div class="mb-5 relative">
+                    <label for="password"
+                           class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">@Resources.ENTER_PASSWORD</label>
+                    <SfTextBox ID="password" @bind-Value="LoginModel.Password" CssClass="e-bigger bg-none" Type="InputType.Password" Placeholder=@Resources.PASSWORD
+                               FloatLabelType="FloatLabelType.Never" aria-label=@Resources.ENTER_PASSWORD
+                               role="textbox" name="LoginModel.Password"></SfTextBox>
+                </div>
+                <div class="e-bigger mt-6">
+                    <SfButton CssClass="w-full e-primary e-btn" type="submit" aria-label="sign in" role="button">
+                        @Resources.SIGNIN
+                    </SfButton>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+@code {
+    private UserNameSigninRequest? LoginModel { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        LoginModel ??= new();
+    }
+}

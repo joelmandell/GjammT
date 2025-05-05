@@ -11,4 +11,28 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
+    <data name="ACCESS_SYSTEM" xml:space="preserve">
+        <value>Access system</value>
+    </data>
+    <data name="CUSTOMER_REGISTER" xml:space="preserve">
+        <value>Customer register</value>
+    </data>
+    <data name="USERNAME" xml:space="preserve">
+        <value>Username</value>
+    </data>
+    <data name="PASSWORD" xml:space="preserve">
+        <value>Password</value>
+    </data>
+    <data name="ENTER_PASSWORD" xml:space="preserve">
+        <value>Enter password</value>
+    </data>
+    <data name="ENTER_USERNAME" xml:space="preserve">
+        <value>Enter username</value>
+    </data>
+    <data name="SIGNIN" xml:space="preserve">
+        <value>Sign in</value>
+    </data>
+    <data name="SIGNOUT" xml:space="preserve">
+        <value>Sign out</value>
+    </data>
 </root>

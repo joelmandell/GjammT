@@ -56,5 +56,41 @@ namespace GjammT.Models {
                 return ResourceManager.GetString("CUSTOMER_REGISTER", resourceCulture);
             }
         }
+        
+        public static string USERNAME {
+            get {
+                return ResourceManager.GetString("USERNAME", resourceCulture);
+            }
+        }
+        
+        public static string PASSWORD {
+            get {
+                return ResourceManager.GetString("PASSWORD", resourceCulture);
+            }
+        }
+        
+        public static string ENTER_USERNAME {
+            get {
+                return ResourceManager.GetString("ENTER_USERNAME", resourceCulture);
+            }
+        }
+        
+        public static string ENTER_PASSWORD {
+            get {
+                return ResourceManager.GetString("ENTER_PASSWORD", resourceCulture);
+            }
+        }
+        
+        public static string SIGNIN {
+            get {
+                return ResourceManager.GetString("SIGNIN", resourceCulture);
+            }
+        }
+        
+        public static string SIGNOUT {
+            get {
+                return ResourceManager.GetString("SIGNOUT", resourceCulture);
+            }
+        }
     }
 }

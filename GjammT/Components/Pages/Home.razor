@@ -1,59 +1,14 @@
 ﻿@page "/"
 @using System.Security.Claims
-@using GjammT.Auth
-@using GjammT.Models.Auth
-@using Microsoft.AspNetCore.Authentication
-@using Microsoft.AspNetCore.Authentication.Cookies
 @using Microsoft.AspNetCore.Components.Authorization
-@inject ILoginService LoginService;
-@inject NavigationManager NavigationManager;
-@attribute [ExcludeFromInteractiveRouting]
 
 <PageTitle>Home</PageTitle>
 
 <AuthorizeView>
     <Authorized>
-        <h2>Hello @context.User.FindFirst(ClaimTypes.Name)?.Value</h2>
+        <h1 class="text-4xl">Hello @context.User.FindFirst(ClaimTypes.Name)?.Value</h1>
     </Authorized>
     <NotAuthorized>
-        <EditForm Context="loginCTX" Model="LoginModel" OnValidSubmit="PerformLogin" FormName="login-gjammt">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-
-            <div>
-                <label for="username">Username</label>
-                <InputText id="username" @bind-Value="LoginModel.UserName" placeholder="Username" />
-            </div>
-            <div>
-                <label for="password">Password</label>
-                <InputText id="password" @bind-Value="LoginModel.Password" type="password" placeholder="Password" />
-            </div>
-            <button type="submit">Login</button>
-        </EditForm>
+        <SignIn />
     </NotAuthorized>
 </AuthorizeView>
-
-@code {
-    [SupplyParameterFromForm]
-    private UserNameSigninRequest LoginModel { get; set; } = new();
-    [CascadingParameter]
-    private HttpContext? HttpContext { get; set; }
-
-    private async Task PerformLogin()
-    {
-        if(LoginService.UserNameSignIn(LoginModel)) {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.Name, LoginModel.UserName),
-            };
-
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
-
-            if(HttpContext is not null) {
-                await (HttpContext?.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal) ?? Task.CompletedTask);
-                NavigationManager.Refresh(true);
-            }
-        }
-    } 
-}

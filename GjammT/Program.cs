@@ -1,8 +1,12 @@
 using GjammT.Auth;
 using GjammT.Components;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Syncfusion.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var syncfusionKey = builder.Configuration["Syncfusion:Key"];
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(syncfusionKey);
 
 // Add services to the container.
 builder.Services.AddSingleton<ILoginService, LoginService>();
@@ -18,6 +22,8 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents().AddInteractiveWebAssemblyComponents();
+builder.Services.AddSyncfusionBlazor();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -34,6 +40,7 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+app.MapControllers();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode();

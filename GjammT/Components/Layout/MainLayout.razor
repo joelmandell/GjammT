@@ -1,33 +1,57 @@
-﻿@using System.Reflection
-@using System.Runtime.Loader
+﻿@using System.Runtime.Loader
+@using GjammT.Models
 @using GjammT.Models.UI
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
 @inherits LayoutComponentBase
-
-<div class="page">
-    <div class="sidebar">
-        <NavMenu/>
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <h1>@uiName</h1>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+<AuthorizeView>
+    <Authorized>
+        <section class="bg-gray-50 dark:bg-gray-950">
+            <div>
+                <div class="border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700">
+                    <div class="ms-6 me-2 lg:me-6 my-2 flex items-center justify-between">
+                        <div class="flex items-center mr-6">
+                            <span class="flex items-center">
+                                <span class="text-lg font-semibold text-gray-900 dark:text-white">GjammT</span>
+                            </span>
+                        </div>
+                        <div class="lg:block">
+                            <SfButton @onclick="Signout" type="button" CssClass="bg-transparent py-2 mr-2" aria-label="feedback" role="button">@Resources.SIGNOUT</SfButton>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section>
+            <div class="px-6 py-4">
+                @Body
+            </div>
+        </section>
+    </Authorized>
+    <NotAuthorized>
+        @Body
+    </NotAuthorized>
+</AuthorizeView>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
 @code {
     private string uiName { get; set; }
     private AssemblyLoadContext? _loadContext;
-
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+    
+    public async Task Signout()
+    {
+        NavigationManager.NavigateTo("/auth/signout", true);
+    }
+    
     protected override void OnInitialized()
     {
         Unload();
@@ -37,13 +61,13 @@
         var bytes = File.ReadAllBytes(dllPath);
 
         var fileAssembly = _loadContext.LoadFromStream(new MemoryStream(bytes));
-        
+
         var uiDeclaration = fileAssembly.GetTypes().First(x => x.BaseType == typeof(BaseDefinition));
         var uiDeclareInstance = (BaseDefinition?)Activator.CreateInstance(uiDeclaration);
         uiName = uiDeclareInstance?.ResourceName ?? "NOT FOUND";
         base.OnInitialized();
     }
-    
+
     public void Unload()
     {
         if (_loadContext != null)
@@ -55,4 +79,5 @@
             GC.WaitForPendingFinalizers();
         }
     }
+
 }
