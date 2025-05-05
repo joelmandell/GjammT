@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\GjammT.Auth\GjammT.Auth.csproj" />
+      <ProjectReference Include="..\GjammT.SharedKernel\GjammT.SharedKernel.csproj" />
     </ItemGroup>
 
     <ItemGroup>

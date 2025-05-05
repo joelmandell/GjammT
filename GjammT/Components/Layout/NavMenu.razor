@@ -1,37 +1,4 @@
-﻿@using System.Reflection
-@using System.Runtime.Loader
-@using GjammT.Models
-@using GjammT.Models.UI
-
+﻿
 @code {
-    private string uiName { get; set; }
-    private AssemblyLoadContext? _loadContext;
-    
-    protected override void OnInitialized()
-    {
-        Unload();
 
-        string dllPath = "/Users/joelmandell/RiderProjects/GjammT/GjammT.CustomerRegister/bin/Debug/net9.0/GjammT.CustomerRegister.dll";
-        _loadContext = new PluginLoadContext(dllPath);
-        var bytes = File.ReadAllBytes(dllPath);
-
-        var fileAssembly = _loadContext.LoadFromStream(new MemoryStream(bytes));
-        
-        var uiDeclaration = fileAssembly.GetTypes().First(x => x.BaseType == typeof(BaseDefinition));
-        var uiDeclareInstance = (BaseDefinition?)Activator.CreateInstance(uiDeclaration);
-        uiName = uiDeclareInstance?.ResourceName ?? "NOT FOUND";
-        base.OnInitialized();
-    }
-    
-    public void Unload()
-    {
-        if (_loadContext != null)
-        {
-            _loadContext.Unload();
-            _loadContext = null;
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-        }
-    }
 }

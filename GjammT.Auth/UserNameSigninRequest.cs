@@ -1,4 +1,4 @@
-namespace GjammT.Models.Auth;
+namespace GjammT.Auth.Models;
 
 public sealed class UserNameSigninRequest
 {

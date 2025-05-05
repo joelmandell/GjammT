@@ -1,5 +1,6 @@
 using GjammT.Auth;
 using GjammT.Components;
+using GjammT.SharedKernel;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Syncfusion.Blazor;
 
@@ -7,6 +8,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 var syncfusionKey = builder.Configuration["Syncfusion:Key"];
 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(syncfusionKey);
+
+// Bind configuration directly to instance
+var appSettings = new AppSettings 
+{
+    ProjectPath = builder.Configuration["AppSettings:ProjectPath"]
+};
+
+ProgramInfo.SetAppSettings(appSettings);
 
 // Add services to the container.
 builder.Services.AddSingleton<ILoginService, LoginService>();

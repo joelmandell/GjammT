@@ -1,7 +1,4 @@
-﻿@using System.Runtime.Loader
-@using GjammT.Models
-@using GjammT.Models.UI
-@using Microsoft.AspNetCore.Authentication
+﻿@using GjammT.SharedKernel
 @using Microsoft.AspNetCore.Components.Authorization
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
@@ -18,7 +15,7 @@
                             </span>
                         </div>
                         <div class="lg:block">
-                            <SfButton @onclick="Signout" type="button" CssClass="bg-transparent py-2 mr-2" aria-label="feedback" role="button">@Resources.SIGNOUT</SfButton>
+                            <SfButton @onclick="Signout" type="button" CssClass="bg-transparent py-2 mr-2" aria-label="feedback" role="button">@ProgramInfo.Resource("SIGNOUT")</SfButton>
                         </div>
                     </div>
                 </div>
@@ -42,8 +39,6 @@
 </div>
 
 @code {
-    private string uiName { get; set; }
-    private AssemblyLoadContext? _loadContext;
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
     
@@ -51,33 +46,4 @@
     {
         NavigationManager.NavigateTo("/auth/signout", true);
     }
-    
-    protected override void OnInitialized()
-    {
-        Unload();
-
-        string dllPath = "/Users/joelmandell/RiderProjects/GjammT/GjammT.CustomerRegister/bin/Debug/net9.0/GjammT.CustomerRegister.dll";
-        _loadContext = new PluginLoadContext(dllPath);
-        var bytes = File.ReadAllBytes(dllPath);
-
-        var fileAssembly = _loadContext.LoadFromStream(new MemoryStream(bytes));
-
-        var uiDeclaration = fileAssembly.GetTypes().First(x => x.BaseType == typeof(BaseDefinition));
-        var uiDeclareInstance = (BaseDefinition?)Activator.CreateInstance(uiDeclaration);
-        uiName = uiDeclareInstance?.ResourceName ?? "NOT FOUND";
-        base.OnInitialized();
-    }
-
-    public void Unload()
-    {
-        if (_loadContext != null)
-        {
-            _loadContext.Unload();
-            _loadContext = null;
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-        }
-    }
-
 }

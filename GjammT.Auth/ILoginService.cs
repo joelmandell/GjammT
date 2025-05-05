@@ -1,12 +1,9 @@
-using GjammT.Models.Auth;
+
+using GjammT.Auth.Models;
 
 namespace GjammT.Auth;
 
 public interface ILoginService
 {
-    public bool UserNameSignIn(UserNameSigninRequest request)
-    {
-        if (request.UserName == "idavall" && request.Password == "1337") return true;
-        return false;
-    }  
+    public Task<bool> UserNameSignIn(UserNameSigninRequest request);
 }
