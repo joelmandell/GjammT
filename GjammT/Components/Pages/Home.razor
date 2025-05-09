@@ -7,8 +7,19 @@
 <AuthorizeView>
     <Authorized>
         <h1 class="text-4xl">Hello @context.User.FindFirst(ClaimTypes.Name)?.Value</h1>
+        <NavLink href="/CustomerRegister">Bla</NavLink>
+        <button @onclick="increment">@cnt</button>
     </Authorized>
     <NotAuthorized>
         <SignIn />
     </NotAuthorized>
 </AuthorizeView>
+
+@code {
+    public int cnt { get; set; }
+
+    public void increment()
+    {
+        cnt++;
+    }
+}

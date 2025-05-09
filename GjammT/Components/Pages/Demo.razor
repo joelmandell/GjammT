@@ -1,0 +1,18 @@
+@page "/Demo"
+@using GjammT.SharedKernel
+@inject ProgramInfo ProgramInfo
+<PageTitle>Demo</PageTitle>
+
+<h3>Demos</h3>
+
+<SfTextBox  CssClass="e-bigger" Type="InputType.Text" @bind-Value="module"></SfTextBox>
+<button @onclick="reload">Add</button>
+@code {
+    public string module { get; set; }
+
+    public void reload()
+    {
+        var path = $"/Users/joelmandell/RiderProjects/GjammT/GjammT.CustomerRegister/bin/Debug/net9.0/GjammT.CustomerRegister.dll";
+        ProgramInfo.LoadComponentAssembly(path);
+    }
+}

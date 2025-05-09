@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using GjammT.Auth;
 using GjammT.Components;
 using GjammT.SharedKernel;
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 var syncfusionKey = builder.Configuration["Syncfusion:Key"];
 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(syncfusionKey);
 
+
 // Bind configuration directly to instance
 var appSettings = new AppSettings 
 {
@@ -19,6 +21,7 @@ ProgramInfo.SetAppSettings(appSettings);
 
 // Add services to the container.
 builder.Services.AddSingleton<ILoginService, LoginService>();
+builder.Services.AddSingleton<ProgramInfo>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -36,6 +39,7 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -50,8 +54,10 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapControllers();
-app.MapRazorComponents<App>()
+var appBuilder = app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode();
 
+
+ProgramInfo.SetRazorBuilder(appBuilder);
 app.Run();

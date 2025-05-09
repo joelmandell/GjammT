@@ -3,7 +3,10 @@ using System.Resources;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 using System.Text.RegularExpressions;
-
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 namespace GjammT.SharedKernel;
 
 /// <summary>
@@ -13,11 +16,72 @@ namespace GjammT.SharedKernel;
 /// </summary>
 public class ProgramInfo
 {
+    private readonly List<Assembly> _loadedAssemblies = new();
+
     private static AppSettings _appSettings { get; set; }
     private static ResourceManager _resourceManager { get; set; }
+    private static RazorComponentsEndpointConventionBuilder _razorComponentsEndpointConventionBuilder { get; set; }
+    private static WebApplication _app { get; set; }
+    
+    public void LoadComponentAssembly(string assemblyPath)
+    {
+        var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
+       
+        var razorBuilder = _razorComponentsEndpointConventionBuilder;
+    
+        var appbuilder = razorBuilder.GetType().GetProperty("ApplicationBuilder",
+            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+        var endpoint = razorBuilder.GetType().GetProperty("EndpointRouteBuilder",
+            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+        var webApp = (WebApplication)endpoint.GetValue(razorBuilder);
+
+        var dataSources = webApp.GetType()
+            .GetProperty("DataSources", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+            .GetValue(webApp) as List<Microsoft.AspNetCore.Routing.EndpointDataSource>;
+        
+        //Fix this to be cleaner
+        var addAssembly = razorBuilder.GetType().GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+            .FirstOrDefault()
+            .GetValue(razorBuilder).GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+            .ElementAt(4);
+        
+        //TODO: Fix this with error handling
+        //I.E remove endpoint if it exists and then add new one.
+        try
+        {
+            addAssembly.Invoke(appbuilder.GetValue(razorBuilder), new object[] { assembly });
+        } catch {}
+
+        //TODO: Fix this with error handling
+        try
+        {
+            var blazorEndpointsource = dataSources.LastOrDefault();
+            
+            //Get the updateendpoints method that does the magic for us and adds the new page component by its endpoint.
+            blazorEndpointsource.GetType()
+                .GetMethod("UpdateEndpoints", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+                .Invoke(blazorEndpointsource, null);
+        } catch {}
+        
+        _loadedAssemblies.Add(assembly);;
+    }
+
+    public IEnumerable<Assembly> GetLoadedAssemblies() => _loadedAssemblies;
+
+    public static void SetApp(WebApplication app)
+    {
+        _app = app;
+    }
     public static void SetAppSettings(AppSettings appSettings)
     {
         _appSettings ??= appSettings;
+    }
+
+    public static void SetRazorBuilder(RazorComponentsEndpointConventionBuilder builder)
+    {
+        _razorComponentsEndpointConventionBuilder ??= builder;
     }
     
     public static AppSettings GetAppSettings => _appSettings;

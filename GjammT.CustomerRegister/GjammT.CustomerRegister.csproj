@@ -1,13 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\GjammT.Models\GjammT.Models.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Components\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.0-preview.3.25172.1" />
+      <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0-preview.3.25172.1" />
+    </ItemGroup>
 </Project>
