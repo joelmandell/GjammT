@@ -22,10 +22,14 @@ public class ProgramInfo
     private static ResourceManager _resourceManager { get; set; }
     private static RazorComponentsEndpointConventionBuilder _razorComponentsEndpointConventionBuilder { get; set; }
     private static WebApplication _app { get; set; }
+    private static bool RefreshResources { get; set; }
     
     public void LoadComponentAssembly(string assemblyPath)
     {
-        var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
+        var bytes = File.ReadAllBytes(assemblyPath);
+
+        var ctx = new AssemblyLoadContext(assemblyPath, true);
+        var assembly = ctx.LoadFromStream(new MemoryStream(bytes));
        
         var razorBuilder = _razorComponentsEndpointConventionBuilder;
     
@@ -41,19 +45,39 @@ public class ProgramInfo
             .GetProperty("DataSources", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
             .GetValue(webApp) as List<Microsoft.AspNetCore.Routing.EndpointDataSource>;
         
-        //Fix this to be cleaner
-        var addAssembly = razorBuilder.GetType().GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+        var assemblyMethods = razorBuilder.GetType()
+            .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
             .FirstOrDefault()
-            .GetValue(razorBuilder).GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-            .ElementAt(4);
+            .GetValue(razorBuilder).GetType()
+            .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+     
+        //Fix this to be cleaner
+        var addAssembly = assemblyMethods.ElementAt(4);
+        var removeAssembly = assemblyMethods.ElementAt(9);
+
+        var findexisting = _loadedAssemblies.FirstOrDefault(a => a.FullName == assembly.FullName);
         
-        //TODO: Fix this with error handling
-        //I.E remove endpoint if it exists and then add new one.
-        try
+        if (findexisting != null)
+        {
+            //remove old version
+            _loadedAssemblies.Remove(findexisting);
+            removeAssembly.Invoke(appbuilder.GetValue(razorBuilder), new object[] { findexisting.FullName });
+            
+            //re-add
+            try
+            {
+                addAssembly.Invoke(appbuilder.GetValue(razorBuilder), new object[] { assembly });
+            } catch {}
+            _loadedAssemblies.Add(assembly);
+        }
+        else
         {
             addAssembly.Invoke(appbuilder.GetValue(razorBuilder), new object[] { assembly });
-        } catch {}
+            _loadedAssemblies.Add(assembly);
+        }
 
+        RefreshResources = true;
+        
         //TODO: Fix this with error handling
         try
         {
@@ -64,8 +88,7 @@ public class ProgramInfo
                 .GetMethod("UpdateEndpoints", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
                 .Invoke(blazorEndpointsource, null);
         } catch {}
-        
-        _loadedAssemblies.Add(assembly);;
+        ctx.Unload();
     }
 
     public IEnumerable<Assembly> GetLoadedAssemblies() => _loadedAssemblies;
@@ -114,7 +137,7 @@ public class ProgramInfo
         //TODO: Implement some caching strategy for reloading the DLL if an 
         //event is sent for redeploying. And modules is downloaded or streamed from secure remote repo.
         //Or CLI-tool that is deploying on the managing server and has an open connection.
-        if(_resourceManager is null) {
+        if(_resourceManager is null || RefreshResources) {
             var assemblyPath = GetBinPath("GjammT.Models");
 
             var _loadContext = new AssemblyLoadContext(nameof(Resource));
@@ -131,6 +154,7 @@ public class ProgramInfo
             // Get the ResourceManager instance
             _resourceManager = (ResourceManager)resourceManagerProp.GetValue(null)
                                               ?? throw new InvalidOperationException("Could not get ResourceManager instance");
+            RefreshResources = false;
         }
         
         // Get the resource value

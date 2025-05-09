@@ -1,7 +1,13 @@
 @page "/CustomerRegister"
-
-<h3>Kundregister</h3>
-
+@using GjammT.SharedKernel
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
+<h3>@ProgramInfo.Resource("CUSTOMER_REGISTER")</h3>
+<p>Menylayout mobil reflection render</p>
+<button class="e-primary e-btn" @onclick="() => counter++">Increment</button>
+Current count: @counter
 @code {
-
+    public int counter { get; set; }
 }
