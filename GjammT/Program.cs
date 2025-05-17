@@ -17,8 +17,6 @@ var appSettings = new AppSettings
     ProjectPath = builder.Configuration["AppSettings:ProjectPath"]
 };
 
-ProgramInfo.SetAppSettings(appSettings);
-
 // Add services to the container.
 builder.Services.AddSingleton<ILoginService, LoginService>();
 builder.Services.AddSingleton<ProgramInfo>();
@@ -32,13 +30,14 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddRazorComponents()
+builder.Services.AddRazorComponents(options => 
+        options.DetailedErrors = builder.Environment.IsDevelopment())
     .AddInteractiveServerComponents().AddInteractiveWebAssemblyComponents();
 builder.Services.AddSyncfusionBlazor();
 builder.Services.AddControllers();
 
 var app = builder.Build();
-
+ServiceLocator.SetServiceProvider(app.Services);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

@@ -6,11 +6,12 @@
         <ImplicitUsings>enable</ImplicitUsings>
       <UserSecretsId>e83ae898-b9ef-46a1-8964-22949972955d</UserSecretsId>
       <LangVersion>preview</LangVersion>
+      <Configurations>Debug;Release;Update</Configurations>
+      <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\GjammT.Auth\GjammT.Auth.csproj" />
-      <ProjectReference Include="..\GjammT.CustomerRegister\GjammT.CustomerRegister.csproj" />
       <ProjectReference Include="..\GjammT.SharedKernel\GjammT.SharedKernel.csproj" />
     </ItemGroup>
 
@@ -27,6 +28,10 @@
       <PackageReference Include="Syncfusion.Blazor.Layouts" Version="29.1.40" />
       <PackageReference Include="Syncfusion.Blazor.Navigations" Version="29.1.40" />
       <PackageReference Include="Syncfusion.Blazor.Themes" Version="29.1.40" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="sharedsettings.json" />
     </ItemGroup>
 
 </Project>

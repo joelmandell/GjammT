@@ -92,5 +92,17 @@ namespace GjammT.Models {
                 return ResourceManager.GetString("SIGNOUT", resourceCulture);
             }
         }
+        
+        public static string FIRSTNAME {
+            get {
+                return ResourceManager.GetString("FIRSTNAME", resourceCulture);
+            }
+        }
+        
+        public static string LASTNAME {
+            get {
+                return ResourceManager.GetString("LASTNAME", resourceCulture);
+            }
+        }
     }
 }

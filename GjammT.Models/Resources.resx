@@ -42,4 +42,10 @@
     <data name="SIGNOUT" xml:space="preserve">
         <value>Logga ut</value>
     </data>
+    <data name="FIRSTNAME" xml:space="preserve">
+        <value>Förnamn</value>
+    </data>
+    <data name="LASTNAME" xml:space="preserve">
+        <value>Efternamn</value>
+    </data>
 </root>

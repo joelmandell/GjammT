@@ -5,10 +5,14 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>preview</LangVersion>
+        <Configurations>Debug;Release;Update</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\GjammT.Core\GjammT.Core.csproj" />
       <ProjectReference Include="..\GjammT.Models\GjammT.Models.csproj" />
+      <ProjectReference Include="..\GjammT.SharedKernel\GjammT.SharedKernel.csproj" />
     </ItemGroup>
 
 </Project>
