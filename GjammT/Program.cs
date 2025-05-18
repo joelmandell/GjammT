@@ -10,7 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 var syncfusionKey = builder.Configuration["Syncfusion:Key"];
 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(syncfusionKey);
 
-
 // Bind configuration directly to instance
 var appSettings = new AppSettings 
 {
@@ -37,7 +36,6 @@ builder.Services.AddSyncfusionBlazor();
 builder.Services.AddControllers();
 
 var app = builder.Build();
-ServiceLocator.SetServiceProvider(app.Services);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -46,6 +44,20 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.Use(async (context, next) =>
+{
+    if(!context.Request.Path.Value?.Contains("blazor", StringComparison.InvariantCultureIgnoreCase) ?? false) {
+        var ProgramInfo = context.RequestServices.GetRequiredService<ProgramInfo>();
+        await ProgramInfo.LoadComponentAssembly("GjammT.CustomerRegister");
+        await ProgramInfo.LoadComponentAssembly("GjammT.AccessSystem");
+    }
+    
+    // Call the next delegate/middleware in the pipeline.
+    await next(context);
+});
+
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 
@@ -56,7 +68,6 @@ app.MapControllers();
 var appBuilder = app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode();
-
 
 ProgramInfo.SetRazorBuilder(appBuilder);
 app.Run();

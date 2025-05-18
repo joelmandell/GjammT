@@ -26,109 +26,120 @@ public class ProgramInfo
     private static readonly Autofac.IContainer Container = ContainerBuilder.Build();
     private static ConcurrentDictionary<string, AssemblyLoadContext> _assemblyLoadContexts;
 
-    public void LoadComponentAssembly(string module)
+    public async Task LoadComponentAssembly(string module)
     {
-        _assemblyLoadContexts ??= new ConcurrentDictionary<string, AssemblyLoadContext>();
-        var assemblyPath = GetBinPath(module);
-        var bytes = File.ReadAllBytes(assemblyPath);
-
-        if(!_assemblyLoadContexts.TryGetValue("GjammT", out var loadContext))
-        {
-            loadContext = new AssemblyLoadContext("GjammT", true);
-            _assemblyLoadContexts.TryAdd("GjammT", loadContext);
-        }
-        else
-        {
-            loadContext.Unload();
-            loadContext = new AssemblyLoadContext("GjammT", true);
-            _assemblyLoadContexts.TryAdd("GjammT", loadContext);
-        }
-       
-        var assembly = loadContext.LoadFromStream(new MemoryStream(bytes));
-        
-        loadContext.Resolving += (context, name) =>
-        {
-            var assemblyRefPath = GetBinPath(name?.Name);
-            if(File.Exists(assemblyRefPath)) {
-                var bytesRef = File.ReadAllBytes(assemblyRefPath);
-                var fileAssembly = loadContext.LoadFromStream(new MemoryStream(bytesRef));
-                return fileAssembly;
-            }
-            return context.Assemblies.FirstOrDefault(a => a.FullName == name.FullName);
-        };
-
-        foreach (var assemblyRef in assembly.GetReferencedAssemblies())
-        {
-            var assemblyRefPath = GetBinPath(assemblyRef?.Name);
-            if(File.Exists(assemblyRefPath)) {
-                var bytesRef = File.ReadAllBytes(assemblyRefPath);
-                var fileAssembly = loadContext.LoadFromStream(new MemoryStream(bytesRef));
-            }
-        }
-        
-        var razorBuilder = _razorComponentsEndpointConventionBuilder;
-    
-        var appbuilder = razorBuilder.GetType().GetProperty("ApplicationBuilder",
-            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-
-        var endpoint = razorBuilder.GetType().GetProperty("EndpointRouteBuilder",
-            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-
-        var webApp = (WebApplication)endpoint.GetValue(razorBuilder);
-
-        var dataSources = webApp.GetType()
-            .GetProperty("DataSources", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-            .GetValue(webApp) as List<Microsoft.AspNetCore.Routing.EndpointDataSource>;
-        
-        var assemblyMethods = razorBuilder.GetType()?
-            .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-            ?.FirstOrDefault()
-            ?.GetValue(razorBuilder).GetType()
-            ?.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-     
-        //Fix this to be cleaner
-        var addAssembly = assemblyMethods?.FirstOrDefault(m => m.Name == "AddAssembly");
-        var removeLibrary = assemblyMethods?.FirstOrDefault(m => m.Name == "RemoveLibrary");
-
-        var existingAssembly = LoadedAssemblies.FirstOrDefault(a => a.FullName == assembly.FullName);
-        
-        if (existingAssembly != null)
-        {
-            //remove old version
-            LoadedAssemblies.Remove(existingAssembly);
-            removeLibrary?.Invoke(appbuilder?.GetValue(razorBuilder), [existingAssembly?.FullName]);
-            
-            //re-add
-            try
-            {
-                addAssembly?.Invoke(appbuilder?.GetValue(razorBuilder), [assembly]);
-            }
-            catch (Exception e)
-            {
-                var ko = 1;
-            }
-            LoadedAssemblies.Add(assembly);
-        }
-        else
-        {
-            addAssembly?.Invoke(appbuilder?.GetValue(razorBuilder), [assembly]);
-            LoadedAssemblies.Add(assembly);
-        }
-        
-        RefreshResources = true;
-
+        await Semaphore.WaitAsync();
         try
         {
-            var blazorEndpointSource = dataSources?.LastOrDefault();
+            _assemblyLoadContexts ??= new ConcurrentDictionary<string, AssemblyLoadContext>();
+            var assemblyPath = GetBinPath(module);
+            var bytes = File.ReadAllBytes(assemblyPath);
 
-            //Get the updateendpoints method that does the magic for us and adds the new page component by its endpoint.
-            blazorEndpointSource?.GetType()
-                ?.GetMethod("UpdateEndpoints", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                ?.Invoke(blazorEndpointSource, null);
+            if (!_assemblyLoadContexts.TryGetValue("GjammT", out var loadContext))
+            {
+                loadContext = new AssemblyLoadContext("GjammT", true);
+                _assemblyLoadContexts.TryAdd("GjammT", loadContext);
+            }
+            else
+            {
+                loadContext.Unload();
+                loadContext = new AssemblyLoadContext("GjammT", true);
+                _assemblyLoadContexts.TryAdd("GjammT", loadContext);
+            }
+
+            var assembly = loadContext.LoadFromStream(new MemoryStream(bytes));
+
+            loadContext.Resolving += (context, name) =>
+            {
+                var assemblyRefPath = GetBinPath(name?.Name);
+                if (File.Exists(assemblyRefPath))
+                {
+                    var bytesRef = File.ReadAllBytes(assemblyRefPath);
+                    var fileAssembly = loadContext.LoadFromStream(new MemoryStream(bytesRef));
+                    return fileAssembly;
+                }
+
+                return context.Assemblies.FirstOrDefault(a => a.FullName == name.FullName);
+            };
+
+            foreach (var assemblyRef in assembly.GetReferencedAssemblies())
+            {
+                var assemblyRefPath = GetBinPath(assemblyRef?.Name);
+                if (File.Exists(assemblyRefPath))
+                {
+                    var bytesRef = File.ReadAllBytes(assemblyRefPath);
+                    var fileAssembly = loadContext.LoadFromStream(new MemoryStream(bytesRef));
+                }
+            }
+
+            var razorBuilder = _razorComponentsEndpointConventionBuilder;
+
+            var appbuilder = razorBuilder.GetType().GetProperty("ApplicationBuilder",
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+            var endpoint = razorBuilder.GetType().GetProperty("EndpointRouteBuilder",
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+            var webApp = (WebApplication)endpoint.GetValue(razorBuilder);
+
+            var dataSources = webApp.GetType()
+                .GetProperty("DataSources", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+                .GetValue(webApp) as List<Microsoft.AspNetCore.Routing.EndpointDataSource>;
+
+            var assemblyMethods = razorBuilder.GetType()?
+                .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+                ?.FirstOrDefault()
+                ?.GetValue(razorBuilder).GetType()
+                ?.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+            var addAssembly = assemblyMethods?.FirstOrDefault(m => m.Name == "AddAssembly");
+            var removeLibrary = assemblyMethods?.FirstOrDefault(m => m.Name == "RemoveLibrary");
+
+            var existingAssembly = LoadedAssemblies.FirstOrDefault(a => a.FullName == assembly.FullName);
+
+            if (existingAssembly != null)
+            {
+                //remove old version
+                LoadedAssemblies.Remove(existingAssembly);
+                removeLibrary?.Invoke(appbuilder?.GetValue(razorBuilder), [existingAssembly?.FullName]);
+
+                //re-add
+                try
+                {
+                    addAssembly?.Invoke(appbuilder?.GetValue(razorBuilder), [assembly]);
+                }
+                catch (Exception e)
+                {
+                    //Logging?
+                }
+
+                LoadedAssemblies.Add(assembly);
+            }
+            else
+            {
+                addAssembly?.Invoke(appbuilder?.GetValue(razorBuilder), [assembly]);
+                LoadedAssemblies.Add(assembly);
+            }
+
+            RefreshResources = true;
+
+            try
+            {
+                var blazorEndpointSource = dataSources?.LastOrDefault();
+
+                //Get the updateendpoints method that does the magic for us and adds the new page component by its endpoint.
+                blazorEndpointSource?.GetType()
+                    ?.GetMethod("UpdateEndpoints", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+                    ?.Invoke(blazorEndpointSource, null);
+            }
+            catch
+            {
+                //Logging
+            }
         }
-        catch
+        finally
         {
-            //Logging
+            Semaphore.Release();
         }
     }
     
@@ -167,28 +178,6 @@ public class ProgramInfo
     
     public static string Version => $"2025.05-alpha";
     public static string Name => "GjammT";
-
-    public static T GetModule<T>(string name,string className)
-    {
-        //Load module and also load a type definition that can be used to access props and invoke parameters
-        //dynamically.
-        
-        //Other way could be to be doing modules in Python for businesslogic using IronPython
-        
-        //Create an static analyzer perhaps that can be used to report
-        //compile errors for missing methods when doing calls - if it is possible to do.
-        
-        var moduleKey = $"GjammT.{name}";
-        var assemblyPath = GetBinPath(moduleKey);
-        var _loadContext = new AssemblyLoadContext(moduleKey,true);
-        var bytes = File.ReadAllBytes(assemblyPath);
-        var fileAssembly = _loadContext.LoadFromStream(new MemoryStream(bytes));
-        var type = fileAssembly.GetTypes().FirstOrDefault(t => t.Name == className);
-        var instance = Activator.CreateInstance(type);
-
-        _loadContext.Unload();
-        return (T)instance;
-    }
     
     public static string Resource(string key)
     {
