@@ -35,4 +35,13 @@
     <data name="SIGNOUT" xml:space="preserve">
         <value>Sign out</value>
     </data>
+    <data name="CUSTOMER_NAME" xml:space="preserve">
+        <value>Kundnamn</value>
+    </data>
+    <data name="FIRSTNAME" xml:space="preserve">
+        <value>First name</value>
+    </data>
+    <data name="LASTNAME" xml:space="preserve">
+        <value>Last name</value>
+    </data>
 </root>

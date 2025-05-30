@@ -104,5 +104,11 @@ namespace GjammT.Models {
                 return ResourceManager.GetString("LASTNAME", resourceCulture);
             }
         }
+        
+        public static string CUSTOMER_NAME {
+            get {
+                return ResourceManager.GetString("CUSTOMER_NAME", resourceCulture);
+            }
+        }
     }
 }

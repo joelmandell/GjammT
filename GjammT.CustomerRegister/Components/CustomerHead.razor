@@ -1,10 +1,47 @@
+@using GjammT.Core
+@using GjammT.Models.CustomerRegister
 @using GjammT.SharedKernel
-<form>
-    <input type="text" placeholder=@ProgramInfo.Resource("FIRSTNAME") />
-    <input type="text" placeholder=@ProgramInfo.Resource("LASTNAME") />
-    WOOOT
-FORM
-</form>
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@using Raven.Client.Documents
+@using Raven.Client.Documents.Session
+@using YourClassLibrary.RavenDB
+@rendermode @(new InteractiveServerRenderMode(prerender: false));
+
+@customerName
+    <InputText @bind-Value="customerName" placeholder=@ProgramInfo.Resource("CUSTOMER_NAME") />
+    <input type="text" placeholder=@ProgramInfo.Resource("FIRSTNAME")/>
+    <input type="text" placeholder=@ProgramInfo.Resource("LASTNAME")/>
+    <button class="button" @onclick="async () => await CreateCustomer()">Skapa</button>
+    <br /><br />
+    <p>The counter value is @currentCount</p>
+    <button class="btn btn-primary" @onclick=IncrementCounter>Increment counter</button>
+
 @code {
-    
+    private int currentCount = 42;
+    private readonly IDocumentStore _store = DocumentStoreHolder.Store;
+
+    private void IncrementCounter()
+
+    {
+
+        currentCount++;
+
+    }
+    private async Task CreateCustomer()
+    {
+        using (IAsyncDocumentSession session = _store.OpenAsyncSession())
+        {
+            // Store the document
+            var customer = new Customer() { Name = customerName, Id = null };
+
+            await session.StoreAsync(customer);
+            // Save changes to the database
+            await session.SaveChangesAsync();
+        }
+        
+    }
+
+    public string customerName { get; set; }
+
 }
