@@ -51,6 +51,7 @@ app.Use(async (context, next) =>
         var ProgramInfo = context.RequestServices.GetRequiredService<ProgramInfo>();
         await ProgramInfo.LoadComponentAssembly("GjammT.CustomerRegister");
         await ProgramInfo.LoadComponentAssembly("GjammT.AccessSystem");
+        await ProgramInfo.LoadComponentAssembly("GjammT.Booking");
     }
     
     // Call the next delegate/middleware in the pipeline.

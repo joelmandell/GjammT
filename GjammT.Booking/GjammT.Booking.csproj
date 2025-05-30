@@ -1,11 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Configurations>Debug;Release;Update</Configurations>
         <Platforms>AnyCPU</Platforms>
+        <LangVersion>preview</LangVersion>
     </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\GjammT.SharedKernel\GjammT.SharedKernel.csproj" />
+      <ProjectReference Include="..\GjammT.UI\GjammT.UI.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="Pages\Home.razor">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </Content>
+    </ItemGroup>
 
 </Project>
