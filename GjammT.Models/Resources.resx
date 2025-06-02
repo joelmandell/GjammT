@@ -51,4 +51,7 @@
     <data name="CUSTOMER_NAME" xml:space="preserve">
         <value>Kundnamn</value>
     </data>
+    <data name="BOOKING_SCHEDULE" xml:space="preserve">
+        <value>Bokningsschema</value>
+    </data>
 </root>

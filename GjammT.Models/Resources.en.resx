@@ -44,4 +44,7 @@
     <data name="LASTNAME" xml:space="preserve">
         <value>Last name</value>
     </data>
+    <data name="BOOKING_SCHEDULE" xml:space="preserve">
+        <value>Booking schedule</value>
+    </data>
 </root>

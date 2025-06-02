@@ -1,6 +1,22 @@
 @page "/Booking"
+@using GjammT.Models.Base
 @using GjammT.SharedKernel
 @rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
-<h1>Booking</h1>
+@using Syncfusion.Blazor.Schedule
+@using Syncfusion.Blazor.Schedule.Internal
+
+<h1>@ProgramInfo.Resource("BOOKING_SCHEDULE")</h1>
+ 
+<SfSchedule TValue="BaseEntity" Height="350px">
+    <ScheduleEventSettings DataSource="@appointmentDatas"></ScheduleEventSettings>
+    <ScheduleViews>
+        <ScheduleView Option="View.Day"></ScheduleView>
+        <ScheduleView Option="View.Week"></ScheduleView>
+        <ScheduleView Option="View.WorkWeek"></ScheduleView>
+        <ScheduleView Option="View.Month"></ScheduleView>
+        <ScheduleView Option="View.Agenda"></ScheduleView>
+    </ScheduleViews>
+</SfSchedule>
 @code {
+    private List<BaseEntity> appointmentDatas = new();
 }

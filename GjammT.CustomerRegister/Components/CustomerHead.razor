@@ -2,10 +2,7 @@
 @using GjammT.SharedKernel
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
-@using Raven.Client.Documents
-@using Raven.Client.Documents.Session
 @using Syncfusion.Blazor.Grids
-@using YourClassLibrary.RavenDB
 @rendermode @(new InteractiveServerRenderMode(prerender: false));
 
     <InputText @bind-Value="customerName" placeholder=@ProgramInfo.Resource("CUSTOMER_NAME") />
@@ -26,7 +23,6 @@
     </div>
     
 @code {
-    private readonly IDocumentStore _store = DocumentStoreHolder.Store;
     private List<Customer> customers = new();
     
     protected override async Task OnInitializedAsync()
@@ -36,19 +32,12 @@
 
     public async Task LoadCustomers()
     {
-        using IAsyncDocumentSession session = _store.OpenAsyncSession() ;
-        customers = await session.Query<Customer>().ToListAsync();
+        //TBD
     }
     
     private async Task CreateCustomer()
     {
-        using IAsyncDocumentSession session = _store.OpenAsyncSession();
-        var customer = new Customer() { Name = customerName, Id = null };
-
-        await session.StoreAsync(customer);
-        await session.SaveChangesAsync();
-        
-        await LoadCustomers();
+       //TBD
     }
 
     public string customerName { get; set; }

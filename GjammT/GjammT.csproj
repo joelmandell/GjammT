@@ -20,6 +20,7 @@
       <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0-preview.4.25258.110" />
       <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.0-preview.4.25258.110" />
       <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.0-preview.4.25258.110" />
+      <PackageReference Include="Microsoft.AspNetCore.ConcurrencyLimiter" Version="10.0.0-preview.4.25258.110" />
       <PackageReference Include="Syncfusion.Blazor.Cards" Version="29.2.4" />
       <PackageReference Include="Syncfusion.Blazor.Core" Version="29.2.4" />
       <PackageReference Include="Syncfusion.Blazor.Data" Version="29.2.4" />
@@ -28,10 +29,17 @@
       <PackageReference Include="Syncfusion.Blazor.Layouts" Version="29.2.4" />
       <PackageReference Include="Syncfusion.Blazor.Navigations" Version="29.2.4" />
       <PackageReference Include="Syncfusion.Blazor.Themes" Version="29.2.4" />
+      <PackageReference Include="Syncfusion.Blazor.Schedule" Version="29.2.4" />
     </ItemGroup>
 
     <ItemGroup>
       <None Include="sharedsettings.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\README.md">
+        <Link>README.md</Link>
+      </Content>
     </ItemGroup>
 
 </Project>

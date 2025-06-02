@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\GjammT.Models\GjammT.Models.csproj" />
       <ProjectReference Include="..\GjammT.SharedKernel\GjammT.SharedKernel.csproj" />
       <ProjectReference Include="..\GjammT.UI\GjammT.UI.csproj" />
     </ItemGroup>

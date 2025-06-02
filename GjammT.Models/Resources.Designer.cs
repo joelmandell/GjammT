@@ -110,5 +110,11 @@ namespace GjammT.Models {
                 return ResourceManager.GetString("CUSTOMER_NAME", resourceCulture);
             }
         }
+        
+        public static string BOOKING_SCHEDULE {
+            get {
+                return ResourceManager.GetString("BOOKING_SCHEDULE", resourceCulture);
+            }
+        }
     }
 }

@@ -1,20 +1,33 @@
-using System.Diagnostics.CodeAnalysis;
+using System.Threading.RateLimiting;
 using GjammT.Auth;
 using GjammT.Components;
 using GjammT.SharedKernel;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Syncfusion.Blazor;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var syncfusionKey = builder.Configuration["Syncfusion:Key"];
 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(syncfusionKey);
 
-// Bind configuration directly to instance
 var appSettings = new AppSettings 
 {
     ProjectPath = builder.Configuration["AppSettings:ProjectPath"]
 };
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests; // Or StatusCodes.Status503ServiceUnavailable
+
+    options.AddConcurrencyLimiter(policyName: "concurrentPolicy", Soptions =>
+    {
+        Soptions.PermitLimit = 100; // Maximum number of concurrent requests allowed
+        Soptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        Soptions.QueueLimit = 10;    // Maximum number of requests that can be queued
+    });
+});
+
 
 // Add services to the container.
 builder.Services.AddSingleton<ILoginService, LoginService>();
