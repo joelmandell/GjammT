@@ -1,22 +1,92 @@
 @page "/Booking"
+@using System.ClientModel
+@using Azure.AI.OpenAI
 @using GjammT.Models.Base
+@using GjammT.Models.CustomerRegister
 @using GjammT.SharedKernel
+@using Markdig
+@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.DependencyInjection
+@using Microsoft.Extensions.Logging
+@using Microsoft.Extensions.Logging.Console
+@using Microsoft.SemanticKernel
+@using Microsoft.SemanticKernel.ChatCompletion
+@using Microsoft.SemanticKernel.Connectors.AzureOpenAI
+@using OpenAI.Chat
 @rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
 @using Syncfusion.Blazor.Schedule
 @using Syncfusion.Blazor.Schedule.Internal
-
+@using Syncfusion.Blazor.InteractiveChat
+@inject IConfiguration Configuration
 <h1>@ProgramInfo.Resource("BOOKING_SCHEDULE")</h1>
- 
-<SfSchedule TValue="BaseEntity" Height="350px">
-    <ScheduleEventSettings DataSource="@appointmentDatas"></ScheduleEventSettings>
-    <ScheduleViews>
-        <ScheduleView Option="View.Day"></ScheduleView>
-        <ScheduleView Option="View.Week"></ScheduleView>
-        <ScheduleView Option="View.WorkWeek"></ScheduleView>
-        <ScheduleView Option="View.Month"></ScheduleView>
-        <ScheduleView Option="View.Agenda"></ScheduleView>
-    </ScheduleViews>
-</SfSchedule>
+<div class="aiassist-container" style="height: 350px; width: 650px;">
+    <SfAIAssistView PromptRequested="@PromptRequest">
+        <AssistViews>
+            <AssistView>
+                <BannerTemplate>
+                    <div class="banner-content">
+                        <div class="e-icons e-assistview-icon"></div>
+                        <h3>AI Assistance</h3>
+                        <div>GjammT Booking AI Agent</div>
+                    </div>
+                </BannerTemplate>
+            </AssistView>
+        </AssistViews>
+    </SfAIAssistView>
+</div>
+
 @code {
     private List<BaseEntity> appointmentDatas = new();
+    
+    private async Task PromptRequest(AssistViewPromptRequestedEventArgs args)
+    {
+        var endpoint = Configuration["GjammT:AIEndpoint"];
+        var model = Configuration["GjammT:AIModel"];
+        var apiKey = Configuration["GjammT:AIApiKey"];
+        
+        var builder = Kernel.CreateBuilder();
+        builder.AddAzureOpenAIChatCompletion(model, endpoint, apiKey);
+
+        var openAIPromptExecutionSettings = new AzureOpenAIPromptExecutionSettings()
+        {
+            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+        };
+        
+        Kernel kernel = builder.Build();
+        kernel.Plugins.AddFromType<Plugins>("Plugins");
+
+        var ai = kernel.Services.GetRequiredService<IChatCompletionService>();
+        
+        // Create chat history
+        var history = new ChatHistory();
+        history.AddUserMessage(args.Prompt);
+        
+        // Get the response from the AI
+        var result = await ai.GetChatMessageContentAsync(
+            history,
+            executionSettings: openAIPromptExecutionSettings,
+            kernel: kernel
+        );
+        
+        var htmlContent = Markdown.ToHtml(result.Content);
+
+        args.Response = htmlContent;
+    }
 }
+
+<style>
+    .aiassist-container .e-view-container {
+        margin: auto;
+    }
+
+    .aiassist-container .e-banner-view {
+        margin-left: 0;
+    }
+    .banner-content .e-assistview-icon:before {
+        font-size: 35px;
+    }
+
+    .banner-content {
+        text-align: center;
+    }
+</style>

@@ -51,14 +51,25 @@ public class ProgramInfo
 
             loadContext.Resolving += (context, name) =>
             {
-                var assemblyRefPath = GetBinPath(name?.Name);
-                if (File.Exists(assemblyRefPath))
+                if (name.Name.AsSpan().StartsWith("GjammT"))
                 {
-                    var bytesRef = File.ReadAllBytes(assemblyRefPath);
-                    var fileAssembly = loadContext.LoadFromStream(new MemoryStream(bytesRef));
-                    return fileAssembly;
+                    var assemblyRefPath = GetBinPath(name?.Name);
+                    if (File.Exists(assemblyRefPath))
+                    {
+                        var bytesRef = File.ReadAllBytes(assemblyRefPath);
+                        var fileAssembly = loadContext.LoadFromStream(new MemoryStream(bytesRef));
+                        return fileAssembly;
+                    }
+                } else
+                {
+                    var assemblyRefPath = GetUIDependableModule(name.Name);
+                    if (File.Exists(assemblyRefPath))
+                    {
+                        var bytesRef = File.ReadAllBytes(assemblyRefPath);
+                        var fileAssembly = loadContext.LoadFromStream(new MemoryStream(bytesRef));
+                        return fileAssembly;
+                    }
                 }
-
                 return context.Assemblies.FirstOrDefault(a => a.FullName == name.FullName);
             };
 
@@ -227,6 +238,16 @@ public class ProgramInfo
         buildModePath = "Update";
 #endif
         var binPath = $"{GetConfig("AppSettings:ProjectPath")}{path}/bin/{buildModePath}/{GetShortNetVersion()}/{path}.dll";
+        return binPath;
+    }
+    
+    public static string GetUIDependableModule(string path)
+    {
+        var buildModePath = "Debug";
+#if RELEASE
+        buildModePath = "Update";
+#endif
+        var binPath = $"{GetConfig("AppSettings:ProjectPath")}GjammT.UI/bin/{buildModePath}/{GetShortNetVersion()}/{path}.dll";
         return binPath;
     }
     
