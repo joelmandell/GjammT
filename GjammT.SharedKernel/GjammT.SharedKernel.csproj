@@ -34,6 +34,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\GjammT.Core\GjammT.Core.csproj" />
+      <ProjectReference Include="..\GjammT.Models\GjammT.Models.csproj" />
     </ItemGroup>
 
     <ItemGroup>

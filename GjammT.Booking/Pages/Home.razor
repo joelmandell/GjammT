@@ -18,9 +18,9 @@
 @using Syncfusion.Blazor.Schedule.Internal
 @using Syncfusion.Blazor.InteractiveChat
 @inject IConfiguration Configuration
-<h1>@ProgramInfo.Resource("BOOKING_SCHEDULE")</h1>
-<div class="aiassist-container" style="height: 350px; width: 650px;">
-    <SfAIAssistView PromptRequested="@PromptRequest">
+<h1 class="text-lg">Kundregister</h1>
+<div class="aiassist-container" style="height: calc(100dvh - 8rem); width: calc(100dvw - 3rem);padding-top:1rem; margin-bottom:10dvh">
+    <SfAIAssistView PromptPlaceholder="Fråga kundregistret någonting 🤸" ShowHeader="false" PromptRequested="@PromptRequest">
         <AssistViews>
             <AssistView>
                 <BannerTemplate>
@@ -37,7 +37,8 @@
 
 @code {
     private List<BaseEntity> appointmentDatas = new();
-    
+    private ChatHistory history = new ChatHistory();
+
     private async Task PromptRequest(AssistViewPromptRequestedEventArgs args)
     {
         var endpoint = Configuration["GjammT:AIEndpoint"];
@@ -45,21 +46,23 @@
         var apiKey = Configuration["GjammT:AIApiKey"];
         
         var builder = Kernel.CreateBuilder();
-        builder.AddAzureOpenAIChatCompletion(model, endpoint, apiKey);
+        // builder.AddAzureOpenAIChatCompletion(model, endpoint, apiKey);
+#pragma warning disable SKEXP0070
+        builder.AddOllamaChatCompletion("llama3.2", new Uri("http://localhost:11434")); 
+#pragma warning restore SKEXP0070
 
         var openAIPromptExecutionSettings = new AzureOpenAIPromptExecutionSettings()
         {
             FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
         };
+        //history.AddSystemMessage("Always respond in danish unless the user suddenly opts out to other language");
+        // Create chat history
+        history.AddUserMessage(args.Prompt);
         
         Kernel kernel = builder.Build();
-        kernel.Plugins.AddFromType<Plugins>("Plugins");
-
+        //kernel.Plugins.AddFromType<Plugins>("Plugins");
+        kernel.Plugins.AddFromObject(new Plugins(kernel, history, "danish"));
         var ai = kernel.Services.GetRequiredService<IChatCompletionService>();
-        
-        // Create chat history
-        var history = new ChatHistory();
-        history.AddUserMessage(args.Prompt);
         
         // Get the response from the AI
         var result = await ai.GetChatMessageContentAsync(

@@ -33,7 +33,7 @@ public class ProgramInfo
         {
             _assemblyLoadContexts ??= new ConcurrentDictionary<string, AssemblyLoadContext>();
             var assemblyPath = GetBinPath(module);
-            var bytes = File.ReadAllBytes(assemblyPath);
+            var bytes = await File.ReadAllBytesAsync(assemblyPath);
 
             if (!_assemblyLoadContexts.TryGetValue("GjammT", out var loadContext))
             {

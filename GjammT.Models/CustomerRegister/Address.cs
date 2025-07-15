@@ -2,7 +2,7 @@ using GjammT.Models.Base;
 
 namespace GjammT.Models.CustomerRegister;
 
-public class Address : BaseEntity
+public class Address : BaseEntity, IMultiTenant
 {
     public required string AddressLine1 { get; set; }
     public string? AddressLine2 { get; set; }
@@ -14,4 +14,6 @@ public class Address : BaseEntity
     public AddressType AddressType { get; set; }
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
+    public Guid ClientCustomerId { get; set; }
+    public ClientCustomer ClientCustomer { get; set; }
 }
