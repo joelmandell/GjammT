@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GjammT.Core", "GjammT.Core\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GjammT.UI", "GjammT.UI\GjammT.UI.csproj", "{EDAB094A-A263-4BC1-BE36-31F5492BB042}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GjammT.AppHost", "GjammT.AppHost\GjammT.AppHost.csproj", "{A186D015-4A9D-4C3A-874D-90EA3E9B2FD2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -127,5 +129,11 @@ Global
 		{EDAB094A-A263-4BC1-BE36-31F5492BB042}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EDAB094A-A263-4BC1-BE36-31F5492BB042}.Update|Any CPU.ActiveCfg = Debug|Any CPU
 		{EDAB094A-A263-4BC1-BE36-31F5492BB042}.Update|Any CPU.Build.0 = Debug|Any CPU
+		{A186D015-4A9D-4C3A-874D-90EA3E9B2FD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A186D015-4A9D-4C3A-874D-90EA3E9B2FD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A186D015-4A9D-4C3A-874D-90EA3E9B2FD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A186D015-4A9D-4C3A-874D-90EA3E9B2FD2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A186D015-4A9D-4C3A-874D-90EA3E9B2FD2}.Update|Any CPU.ActiveCfg = Debug|Any CPU
+		{A186D015-4A9D-4C3A-874D-90EA3E9B2FD2}.Update|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 EndGlobal
