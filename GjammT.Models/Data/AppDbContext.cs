@@ -7,7 +7,7 @@ namespace GjammT.Models.Data;
 
 public class AppDbContext : DbContext
 {
-    private readonly Guid? _tenantId = Guid.NewGuid();
+    private readonly Guid? _tenantId;
 
     public AppDbContext()
     {
@@ -16,6 +16,11 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
         
+    }
+    
+    public AppDbContext(DbContextOptions<AppDbContext> options, Guid? tenantId) : base(options)
+    {
+        _tenantId = tenantId;
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -44,25 +49,35 @@ public class AppDbContext : DbContext
             .WithMany() // A PermissionGroup can be in many RolePermissions, but we don't need a navigation property on PermissionGroup.
             .HasForeignKey(rp => rp.PermissionGroupId);
         
+        // 4. Configure the relationship between Customer and ClientCustomer for multi-tenancy
+        modelBuilder.Entity<Customer>()
+            .HasOne(c => c.ClientCustomer)
+            .WithMany() // A ClientCustomer can have many Customers
+            .HasForeignKey(c => c.ClientCustomerId);
+        
         // This generic loop applies tenancy rules.
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        // Only apply query filter if a tenant ID is provided
+        if (_tenantId.HasValue)
         {
-            if (typeof(IMultiTenant).IsAssignableFrom(entityType.ClrType))
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
-                var parameter = Expression.Parameter(entityType.ClrType, "e");
-                var property = Expression.Property(parameter, nameof(IMultiTenant.ClientCustomerId));
-                var tenantIdConstant = Expression.Constant(_tenantId);
-                var body = Expression.Equal(property, tenantIdConstant);
-                var lambda = Expression.Lambda(body, parameter);
-                entityType.SetQueryFilter(lambda);
+                if (typeof(IMultiTenant).IsAssignableFrom(entityType.ClrType))
+                {
+                    var parameter = Expression.Parameter(entityType.ClrType, "e");
+                    var property = Expression.Property(parameter, nameof(IMultiTenant.ClientCustomerId));
+                    var tenantIdConstant = Expression.Constant(_tenantId);
+                    var body = Expression.Equal(property, tenantIdConstant);
+                    var lambda = Expression.Lambda(body, parameter);
+                    entityType.SetQueryFilter(lambda);
+                }
             }
         }
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // This logic also only looks for `IMultiTenant` implementers.
-        // New `Customer` entities will be ignored by this block and saved normally.
+        // This logic only looks for `IMultiTenant` implementers.
+        // Global entities like User, Role, and PermissionGroup will be ignored by this block.
         foreach (var entry in ChangeTracker.Entries<IMultiTenant>().Where(e => e.State == EntityState.Added))
         {
             if (_tenantId.HasValue)
@@ -71,7 +86,11 @@ public class AppDbContext : DbContext
             }
             else
             {
-                throw new InvalidOperationException("Cannot save a tenant-specific entity without a valid Tenant ID.");
+                // Allow saving without tenant ID if explicitly set (for migration scenarios)
+                if (entry.Entity.ClientCustomerId == Guid.Empty)
+                {
+                    throw new InvalidOperationException($"Cannot save a tenant-specific entity ({entry.Entity.GetType().Name}) without a valid Tenant ID.");
+                }
             }
         }
         return base.SaveChangesAsync(cancellationToken);
@@ -84,4 +103,5 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Address> Addresses { get; set; }
+    public DbSet<ClientCustomer> ClientCustomers { get; set; }
 }

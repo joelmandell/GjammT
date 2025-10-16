@@ -37,5 +37,40 @@ The name **GjammT** honors the FRI development team at Idavall Data AB between 2
 ## Technical Specifications
 | Aspect         | Implementation Detail                     |
 |----------------|-------------------------------------------|
-| To be added    | To be added                               | 
-|
+| Framework      | ASP.NET Core                              |
+| Database       | PostgreSQL with EF Core                   |
+| Architecture   | Multi-Tenant with Shared Authorization    |
+| Authentication | User-based with Role Permissions          |
+
+## Multi-Tenant Architecture
+
+GjammT implements a sophisticated multi-tenant architecture that allows:
+- ✅ Multiple tenants (ClientCustomers) to share the same database
+- ✅ Centralized authorization and user role logic across all tenants
+- ✅ Users to work for multiple tenants simultaneously with different roles
+- ✅ Automatic data isolation per tenant with global user management
+
+### Documentation
+
+- 📖 **[Quick Reference](MULTI_TENANT_QUICK_REFERENCE.md)** - Quick start guide and common operations
+- 📖 **[Architecture Guide](MULTI_TENANT_ARCHITECTURE.md)** - Detailed architecture explanation
+- 📖 **[Usage Examples](MULTI_TENANT_USAGE.md)** - Code examples and best practices
+- 📖 **[Implementation Guide](IMPLEMENTATION_GUIDE.md)** - Setup and migration guide
+- 📊 **[Architecture Diagrams](ARCHITECTURE_DIAGRAMS.md)** - Visual diagrams and flows
+
+### Key Features
+
+**Global Entities (Shared across tenants):**
+- Users - Single identity across all tenants
+- Roles - Defined once, used by all tenants
+- Permissions - Centralized permission management
+
+**Tenant-Specific Entities:**
+- Customers - Isolated per tenant
+- Addresses - Belong to specific tenant
+
+**Cross-Tenant Bridge:**
+- UserCustomerRole - Links users to customers with specific roles across tenants
+
+For implementation details, see [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md).
+
