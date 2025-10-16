@@ -2,7 +2,7 @@ using GjammT.Models.Base;
 
 namespace GjammT.Models.CustomerRegister;
 
-public class Customer : BaseEntity
+public class Customer : BaseEntity, IMultiTenant
 {
     public required string Name { get; set; }
     public string LegacyCode { get; set; }
@@ -18,4 +18,8 @@ public class Customer : BaseEntity
     public List<Address> Addresses { get; set; } = new();
     
     public ICollection<UserCustomerRole> UserRoles { get; set; } = new List<UserCustomerRole>();
+    
+    // Multi-tenant support - links Customer to a specific ClientCustomer (tenant)
+    public Guid ClientCustomerId { get; set; }
+    public ClientCustomer ClientCustomer { get; set; }
 }
