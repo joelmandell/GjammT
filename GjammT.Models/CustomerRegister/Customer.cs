@@ -18,4 +18,6 @@ public class Customer : BaseEntity
     public List<Address> Addresses { get; set; } = new();
     
     public ICollection<UserCustomerRole> UserRoles { get; set; } = new List<UserCustomerRole>();
+    
+    public ICollection<CustomerTenant> Tenants { get; set; } = new List<CustomerTenant>();
 }
