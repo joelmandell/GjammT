@@ -10,9 +10,9 @@ public class CustomerTenant : BaseEntity
 {
     // Foreign key to the Customer
     public Guid CustomerId { get; set; }
-    public Customer Customer { get; set; }
+    public Customer? Customer { get; set; }
 
     // Foreign key to the Tenant (ClientCustomer)
     public Guid ClientCustomerId { get; set; }
-    public ClientCustomer ClientCustomer { get; set; }
+    public ClientCustomer? ClientCustomer { get; set; }
 }

@@ -46,6 +46,10 @@ public class AppDbContext : DbContext
         
         // 4. Configure the many-to-many relationship between Customer and ClientCustomer (tenant)
         // A customer can exist in multiple tenants, and a tenant can have multiple customers
+        // Define composite primary key to prevent duplicate customer-tenant relationships
+        modelBuilder.Entity<CustomerTenant>()
+            .HasKey(ct => new { ct.CustomerId, ct.ClientCustomerId });
+        
         modelBuilder.Entity<CustomerTenant>()
             .HasOne(ct => ct.Customer)
             .WithMany(c => c.Tenants)
