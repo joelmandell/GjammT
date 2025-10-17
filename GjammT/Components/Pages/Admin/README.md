@@ -6,6 +6,8 @@ The GjammT Admin Interface provides a comprehensive administrative dashboard for
 ## Access
 - **Base URL**: `/gjadmin`
 - **Authentication**: Required (uses `[Authorize]` attribute)
+- **Admin Sign In**: Use `/Auth/SignInGjAdmin` endpoint with credentials from appsettings.json
+- **Configuration**: See [GJADMIN_AUTH.md](../../../../../GJADMIN_AUTH.md) for authentication details
 - **Layout**: Uses `AdminLayout.razor` for consistent navigation and styling
 
 ## Available Pages
