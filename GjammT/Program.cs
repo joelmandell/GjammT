@@ -2,7 +2,9 @@ using System.Threading.RateLimiting;
 using GjammT.Auth;
 using GjammT.Components;
 using GjammT.SharedKernel;
+using GjammT.Models.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using Syncfusion.Blazor;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -32,6 +34,11 @@ builder.Services.AddRateLimiter(options =>
 // Add services to the container.
 builder.Services.AddSingleton<ILoginService, LoginService>();
 builder.Services.AddSingleton<ProgramInfo>();
+
+// Register DbContext factory for admin pages
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection") 
+        ?? "Server=localhost;Port=5432;Database=postgres;User Id=joelmandell;"));
 
 builder.Services.AddAuthentication(options =>
     {

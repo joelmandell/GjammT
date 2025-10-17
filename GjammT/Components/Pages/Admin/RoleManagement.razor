@@ -1,0 +1,739 @@
+@page "/gjadmin/roles"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@layout AdminLayout
+@using GjammT.Models.Base
+@using GjammT.Models.Data
+@inject IDbContextFactory<AppDbContext> ContextFactory
+
+<PageTitle>Role Management - GjammT Admin</PageTitle>
+
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Role Management</h1>
+            <p class="page-description">Define and manage user roles with permissions</p>
+        </div>
+        <button class="btn btn-primary" @onclick="ShowAddDialog">
+            <span>+</span> Add Role
+        </button>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading">Loading roles...</div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="error-message">@errorMessage</div>
+    }
+    else
+    {
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Role Name</th>
+                        <th>Description</th>
+                        <th>Permissions</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var role in roles)
+                    {
+                        <tr>
+                            <td><strong>@role.Name</strong></td>
+                            <td>@role.Description</td>
+                            <td>
+                                @if (role.Permissions.Any())
+                                {
+                                    <span class="badge badge-info">@role.Permissions.Count permission group(s)</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-warning">No permissions</span>
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info" @onclick="() => ShowPermissionsDialog(role)">Permissions</button>
+                                <button class="btn btn-sm btn-secondary" @onclick="() => ShowEditDialog(role)">Edit</button>
+                                <button class="btn btn-sm btn-danger" @onclick="() => ShowDeleteDialog(role)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@if (showDialog)
+{
+    <div class="modal-overlay" @onclick="CloseDialog">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>@(isEditing ? "Edit Role" : "Add New Role")</h2>
+                <button class="modal-close" @onclick="CloseDialog">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Role Name *</label>
+                    <input type="text" class="form-control" @bind="currentRole.Name" placeholder="e.g., Administrator, Agent, Viewer" />
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea class="form-control" rows="3" @bind="currentRole.Description" placeholder="Describe what this role can do"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseDialog">Cancel</button>
+                <button class="btn btn-primary" @onclick="SaveRole" disabled="@isSaving">
+                    @(isSaving ? "Saving..." : "Save")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showPermissionsDialog)
+{
+    <div class="modal-overlay" @onclick="ClosePermissionsDialog">
+        <div class="modal-content modal-large" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>Manage Permissions: @selectedRole?.Name</h2>
+                <button class="modal-close" @onclick="ClosePermissionsDialog">×</button>
+            </div>
+            <div class="modal-body">
+                @if (permissionGroups.Any())
+                {
+                    <div class="permissions-grid">
+                        @foreach (var group in permissionGroups)
+                        {
+                            var rolePermission = selectedRolePermissions.FirstOrDefault(rp => rp.PermissionGroupId == group.Id);
+                            <div class="permission-item">
+                                <div class="permission-header">
+                                    <strong>@group.Name</strong>
+                                </div>
+                                <div class="permission-flags">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" 
+                                               checked="@HasPermission(rolePermission, PermissionFlags.CanRead)"
+                                               @onchange="e => TogglePermission(group.Id, PermissionFlags.CanRead, (bool)e.Value!)" />
+                                        Can Read
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" 
+                                               checked="@HasPermission(rolePermission, PermissionFlags.CanCreate)"
+                                               @onchange="e => TogglePermission(group.Id, PermissionFlags.CanCreate, (bool)e.Value!)" />
+                                        Can Create
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" 
+                                               checked="@HasPermission(rolePermission, PermissionFlags.CanWrite)"
+                                               @onchange="e => TogglePermission(group.Id, PermissionFlags.CanWrite, (bool)e.Value!)" />
+                                        Can Write
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" 
+                                               checked="@HasPermission(rolePermission, PermissionFlags.CanDelete)"
+                                               @onchange="e => TogglePermission(group.Id, PermissionFlags.CanDelete, (bool)e.Value!)" />
+                                        Can Delete
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="no-data">No permission groups available. Create permission groups first.</p>
+                }
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="ClosePermissionsDialog">Cancel</button>
+                <button class="btn btn-primary" @onclick="SavePermissions" disabled="@isSaving">
+                    @(isSaving ? "Saving..." : "Save Permissions")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showDeleteDialog)
+{
+    <div class="modal-overlay" @onclick="CloseDeleteDialog">
+        <div class="modal-content modal-small" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>Confirm Delete</h2>
+                <button class="modal-close" @onclick="CloseDeleteDialog">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>@roleToDelete?.Name</strong>?</p>
+                <p class="warning-text">This will affect all users assigned to this role.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseDeleteDialog">Cancel</button>
+                <button class="btn btn-danger" @onclick="DeleteRole" disabled="@isSaving">
+                    @(isSaving ? "Deleting..." : "Delete")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Role> roles = new();
+    private List<PermissionGroup> permissionGroups = new();
+    private List<RolePermission> selectedRolePermissions = new();
+    private Role currentRole = new();
+    private Role? roleToDelete;
+    private Role? selectedRole;
+    private bool showDialog = false;
+    private bool showPermissionsDialog = false;
+    private bool showDeleteDialog = false;
+    private bool isEditing = false;
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRoles();
+        await LoadPermissionGroups();
+    }
+
+    private async Task LoadRoles()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            await using var context = await ContextFactory.CreateDbContextAsync();
+            roles = await context.Roles
+                .Include(r => r.Permissions)
+                .OrderBy(r => r.Name)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading roles: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadPermissionGroups()
+    {
+        try
+        {
+            await using var context = await ContextFactory.CreateDbContextAsync();
+            permissionGroups = await context.PermissionGroups.OrderBy(pg => pg.Name).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading permission groups: {ex.Message}";
+        }
+    }
+
+    private async Task ShowPermissionsDialog(Role role)
+    {
+        selectedRole = role;
+        await LoadRolePermissions(role.Id);
+        showPermissionsDialog = true;
+    }
+
+    private async Task LoadRolePermissions(Guid roleId)
+    {
+        try
+        {
+            await using var context = await ContextFactory.CreateDbContextAsync();
+            selectedRolePermissions = await context.RolePermissions
+                .Where(rp => rp.RoleId == roleId)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading role permissions: {ex.Message}";
+        }
+    }
+
+    private bool HasPermission(RolePermission? rolePermission, PermissionFlags flag)
+    {
+        if (rolePermission == null) return false;
+        return (rolePermission.AllowedActions & (int)flag) != 0;
+    }
+
+    private void TogglePermission(Guid permissionGroupId, PermissionFlags flag, bool enabled)
+    {
+        var rolePermission = selectedRolePermissions.FirstOrDefault(rp => rp.PermissionGroupId == permissionGroupId);
+        
+        if (rolePermission == null && enabled)
+        {
+            rolePermission = new RolePermission
+            {
+                Id = Guid.NewGuid(),
+                RoleId = selectedRole!.Id,
+                PermissionGroupId = permissionGroupId,
+                AllowedActions = (int)flag
+            };
+            selectedRolePermissions.Add(rolePermission);
+        }
+        else if (rolePermission != null)
+        {
+            if (enabled)
+            {
+                rolePermission.AllowedActions |= (int)flag;
+            }
+            else
+            {
+                rolePermission.AllowedActions &= ~(int)flag;
+            }
+        }
+    }
+
+    private async Task SavePermissions()
+    {
+        if (selectedRole == null) return;
+
+        try
+        {
+            isSaving = true;
+            await using var context = await ContextFactory.CreateDbContextAsync();
+
+            // Remove existing permissions for this role
+            var existingPermissions = await context.RolePermissions
+                .Where(rp => rp.RoleId == selectedRole.Id)
+                .ToListAsync();
+            context.RolePermissions.RemoveRange(existingPermissions);
+
+            // Add updated permissions (only those with at least one flag set)
+            var validPermissions = selectedRolePermissions.Where(rp => rp.AllowedActions > 0).ToList();
+            await context.RolePermissions.AddRangeAsync(validPermissions);
+
+            await context.SaveChangesAsync();
+            await LoadRoles();
+            ClosePermissionsDialog();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving permissions: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void ShowAddDialog()
+    {
+        currentRole = new Role();
+        isEditing = false;
+        showDialog = true;
+    }
+
+    private void ShowEditDialog(Role role)
+    {
+        currentRole = new Role
+        {
+            Id = role.Id,
+            Name = role.Name,
+            Description = role.Description
+        };
+        isEditing = true;
+        showDialog = true;
+    }
+
+    private void ShowDeleteDialog(Role role)
+    {
+        roleToDelete = role;
+        showDeleteDialog = true;
+    }
+
+    private void CloseDialog()
+    {
+        showDialog = false;
+        currentRole = new Role();
+    }
+
+    private void ClosePermissionsDialog()
+    {
+        showPermissionsDialog = false;
+        selectedRole = null;
+        selectedRolePermissions.Clear();
+    }
+
+    private void CloseDeleteDialog()
+    {
+        showDeleteDialog = false;
+        roleToDelete = null;
+    }
+
+    private async Task SaveRole()
+    {
+        if (string.IsNullOrWhiteSpace(currentRole.Name))
+        {
+            return;
+        }
+
+        try
+        {
+            isSaving = true;
+            await using var context = await ContextFactory.CreateDbContextAsync();
+
+            if (isEditing)
+            {
+                var existing = await context.Roles.FindAsync(currentRole.Id);
+                if (existing != null)
+                {
+                    existing.Name = currentRole.Name;
+                    existing.Description = currentRole.Description;
+                }
+            }
+            else
+            {
+                currentRole.Id = Guid.NewGuid();
+                await context.Roles.AddAsync(currentRole);
+            }
+
+            await context.SaveChangesAsync();
+            await LoadRoles();
+            CloseDialog();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving role: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task DeleteRole()
+    {
+        if (roleToDelete == null) return;
+
+        try
+        {
+            isSaving = true;
+            await using var context = await ContextFactory.CreateDbContextAsync();
+            var role = await context.Roles.FindAsync(roleToDelete.Id);
+            if (role != null)
+            {
+                context.Roles.Remove(role);
+                await context.SaveChangesAsync();
+                await LoadRoles();
+            }
+            CloseDeleteDialog();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting role: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}
+
+<style>
+    .page-container {
+        max-width: 1400px;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .page-description {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: #1d4ed8;
+    }
+
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+        background: #4b5563;
+    }
+
+    .btn-info {
+        background: #0891b2;
+        color: white;
+    }
+
+    .btn-info:hover:not(:disabled) {
+        background: #0e7490;
+    }
+
+    .btn-danger {
+        background: #dc2626;
+        color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+        background: #b91c1c;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+        margin-right: 0.5rem;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .badge-info {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        background: #f9fafb;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .data-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        color: #4b5563;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .loading, .error-message {
+        background: white;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .error-message {
+        color: #dc2626;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 0.5rem;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-large {
+        max-width: 800px;
+    }
+
+    .modal-small {
+        max-width: 400px;
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-close:hover {
+        color: #111827;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        padding: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+    }
+
+    .permissions-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .permission-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.375rem;
+        padding: 1rem;
+    }
+
+    .permission-header {
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+        color: #111827;
+    }
+
+    .permission-flags {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: normal;
+        cursor: pointer;
+        color: #4b5563;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+        width: auto;
+    }
+
+    .no-data {
+        text-align: center;
+        color: #6b7280;
+        padding: 2rem;
+    }
+
+    .warning-text {
+        color: #dc2626;
+        font-weight: 500;
+    }
+</style>

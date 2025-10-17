@@ -1,0 +1,573 @@
+@page "/gjadmin/customers"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@layout AdminLayout
+@using GjammT.Models.CustomerRegister
+@using GjammT.Models.Base
+@using GjammT.Models.Data
+@inject IDbContextFactory<AppDbContext> ContextFactory
+
+<PageTitle>Customer Management - GjammT Admin</PageTitle>
+
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Customer Management</h1>
+            <p class="page-description">Manage tenant-specific customers</p>
+        </div>
+        <button class="btn btn-primary" @onclick="ShowAddDialog">
+            <span>+</span> Add Customer
+        </button>
+    </div>
+
+    <div class="filter-section">
+        <div class="form-group">
+            <label>Filter by Tenant</label>
+            <select class="form-control" @bind="selectedTenantId" @bind:after="LoadCustomers">
+                <option value="">All Tenants</option>
+                @foreach (var tenant in tenants)
+                {
+                    <option value="@tenant.Id">@tenant.CompanyName</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading">Loading customers...</div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="error-message">@errorMessage</div>
+    }
+    else
+    {
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>SSN</th>
+                        <th>EIN</th>
+                        <th>Tenant</th>
+                        <th>Legacy Code</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var customer in customers)
+                    {
+                        <tr>
+                            <td>@customer.Name</td>
+                            <td>@(customer.Ssn ?? "N/A")</td>
+                            <td>@(customer.Ein ?? "N/A")</td>
+                            <td>@(tenants.FirstOrDefault(t => t.Id == customer.ClientCustomerId)?.CompanyName ?? "Unknown")</td>
+                            <td>@(customer.LegacyCode ?? "N/A")</td>
+                            <td>
+                                <button class="btn btn-sm btn-secondary" @onclick="() => ShowEditDialog(customer)">Edit</button>
+                                <button class="btn btn-sm btn-danger" @onclick="() => ShowDeleteDialog(customer)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@if (showDialog)
+{
+    <div class="modal-overlay" @onclick="CloseDialog">
+        <div class="modal-content modal-large" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>@(isEditing ? "Edit Customer" : "Add New Customer")</h2>
+                <button class="modal-close" @onclick="CloseDialog">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Name *</label>
+                    <input type="text" class="form-control" @bind="currentCustomer.Name" />
+                </div>
+                <div class="form-group">
+                    <label>Tenant *</label>
+                    <select class="form-control" @bind="selectedCustomerTenantId">
+                        <option value="">Select Tenant</option>
+                        @foreach (var tenant in tenants)
+                        {
+                            <option value="@tenant.Id">@tenant.CompanyName</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Legacy Code</label>
+                    <input type="text" class="form-control" @bind="currentCustomer.LegacyCode" />
+                    <small class="form-text">Optional legacy system identifier</small>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>SSN (Social Security Number)</label>
+                        <input type="text" class="form-control" @bind="currentCustomer.Ssn" />
+                    </div>
+                    <div class="form-group">
+                        <label>EIN (Employer ID Number)</label>
+                        <input type="text" class="form-control" @bind="currentCustomer.Ein" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseDialog">Cancel</button>
+                <button class="btn btn-primary" @onclick="SaveCustomer" disabled="@isSaving">
+                    @(isSaving ? "Saving..." : "Save")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showDeleteDialog)
+{
+    <div class="modal-overlay" @onclick="CloseDeleteDialog">
+        <div class="modal-content modal-small" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>Confirm Delete</h2>
+                <button class="modal-close" @onclick="CloseDeleteDialog">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>@customerToDelete?.Name</strong>?</p>
+                <p class="warning-text">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseDeleteDialog">Cancel</button>
+                <button class="btn btn-danger" @onclick="DeleteCustomer" disabled="@isSaving">
+                    @(isSaving ? "Deleting..." : "Delete")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Customer> customers = new();
+    private List<ClientCustomer> tenants = new();
+    private Customer currentCustomer = new();
+    private Customer? customerToDelete;
+    private bool showDialog = false;
+    private bool showDeleteDialog = false;
+    private bool isEditing = false;
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private string? errorMessage;
+    private string selectedTenantId = "";
+    private string selectedCustomerTenantId = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTenants();
+        await LoadCustomers();
+    }
+
+    private async Task LoadTenants()
+    {
+        try
+        {
+            await using var context = await ContextFactory.CreateDbContextAsync();
+            tenants = await context.ClientCustomers.OrderBy(t => t.CompanyName).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading tenants: {ex.Message}";
+        }
+    }
+
+    private async Task LoadCustomers()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            await using var context = await ContextFactory.CreateDbContextAsync();
+            
+            var query = context.Customers.AsQueryable();
+            
+            if (!string.IsNullOrEmpty(selectedTenantId) && Guid.TryParse(selectedTenantId, out var tenantGuid))
+            {
+                query = query.Where(c => c.ClientCustomerId == tenantGuid);
+            }
+            
+            customers = await query.OrderBy(c => c.Name).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading customers: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowAddDialog()
+    {
+        currentCustomer = new Customer { Name = "" };
+        selectedCustomerTenantId = "";
+        isEditing = false;
+        showDialog = true;
+    }
+
+    private void ShowEditDialog(Customer customer)
+    {
+        currentCustomer = new Customer
+        {
+            Id = customer.Id,
+            Name = customer.Name,
+            LegacyCode = customer.LegacyCode,
+            Ssn = customer.Ssn,
+            Ein = customer.Ein,
+            ClientCustomerId = customer.ClientCustomerId
+        };
+        selectedCustomerTenantId = customer.ClientCustomerId.ToString();
+        isEditing = true;
+        showDialog = true;
+    }
+
+    private void ShowDeleteDialog(Customer customer)
+    {
+        customerToDelete = customer;
+        showDeleteDialog = true;
+    }
+
+    private void CloseDialog()
+    {
+        showDialog = false;
+        currentCustomer = new Customer { Name = "" };
+        selectedCustomerTenantId = "";
+    }
+
+    private void CloseDeleteDialog()
+    {
+        showDeleteDialog = false;
+        customerToDelete = null;
+    }
+
+    private async Task SaveCustomer()
+    {
+        if (string.IsNullOrWhiteSpace(currentCustomer.Name) || 
+            string.IsNullOrEmpty(selectedCustomerTenantId) ||
+            !Guid.TryParse(selectedCustomerTenantId, out var tenantGuid))
+        {
+            return;
+        }
+
+        try
+        {
+            isSaving = true;
+            await using var context = await ContextFactory.CreateDbContextAsync();
+
+            currentCustomer.ClientCustomerId = tenantGuid;
+
+            if (isEditing)
+            {
+                var existing = await context.Customers.FindAsync(currentCustomer.Id);
+                if (existing != null)
+                {
+                    existing.Name = currentCustomer.Name;
+                    existing.LegacyCode = currentCustomer.LegacyCode;
+                    existing.Ssn = currentCustomer.Ssn;
+                    existing.Ein = currentCustomer.Ein;
+                    existing.ClientCustomerId = currentCustomer.ClientCustomerId;
+                }
+            }
+            else
+            {
+                currentCustomer.Id = Guid.NewGuid();
+                await context.Customers.AddAsync(currentCustomer);
+            }
+
+            await context.SaveChangesAsync();
+            await LoadCustomers();
+            CloseDialog();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving customer: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task DeleteCustomer()
+    {
+        if (customerToDelete == null) return;
+
+        try
+        {
+            isSaving = true;
+            await using var context = await ContextFactory.CreateDbContextAsync();
+            var customer = await context.Customers.FindAsync(customerToDelete.Id);
+            if (customer != null)
+            {
+                context.Customers.Remove(customer);
+                await context.SaveChangesAsync();
+                await LoadCustomers();
+            }
+            CloseDeleteDialog();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting customer: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}
+
+<style>
+    .page-container {
+        max-width: 1400px;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .page-description {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .filter-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: #1d4ed8;
+    }
+
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+        background: #4b5563;
+    }
+
+    .btn-danger {
+        background: #dc2626;
+        color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+        background: #b91c1c;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+        margin-right: 0.5rem;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        background: #f9fafb;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .data-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        color: #4b5563;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .loading, .error-message {
+        background: white;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .error-message {
+        color: #dc2626;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 0.5rem;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-large {
+        max-width: 700px;
+    }
+
+    .modal-small {
+        max-width: 400px;
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-close:hover {
+        color: #111827;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        padding: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .form-text {
+        display: block;
+        margin-top: 0.25rem;
+        color: #6b7280;
+        font-size: 0.75rem;
+    }
+
+    .warning-text {
+        color: #dc2626;
+        font-weight: 500;
+    }
+</style>

@@ -1,0 +1,156 @@
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="admin-layout">
+    <div class="admin-sidebar">
+        <div class="admin-brand">
+            <h2>GjammT Admin</h2>
+        </div>
+        <nav class="admin-nav">
+            <NavLink href="/gjadmin" Match="NavLinkMatch.All" class="admin-nav-link">
+                <span class="nav-icon">🏠</span>
+                Dashboard
+            </NavLink>
+            <NavLink href="/gjadmin/tenants" class="admin-nav-link">
+                <span class="nav-icon">🏢</span>
+                Tenants
+            </NavLink>
+            <NavLink href="/gjadmin/users" class="admin-nav-link">
+                <span class="nav-icon">👥</span>
+                Users
+            </NavLink>
+            <NavLink href="/gjadmin/customers" class="admin-nav-link">
+                <span class="nav-icon">👤</span>
+                Customers
+            </NavLink>
+            <NavLink href="/gjadmin/roles" class="admin-nav-link">
+                <span class="nav-icon">🔐</span>
+                Roles
+            </NavLink>
+            <NavLink href="/gjadmin/permissions" class="admin-nav-link">
+                <span class="nav-icon">🔑</span>
+                Permissions
+            </NavLink>
+            <hr class="nav-divider" />
+            <NavLink href="/" class="admin-nav-link">
+                <span class="nav-icon">←</span>
+                Back to Main Site
+            </NavLink>
+        </nav>
+    </div>
+    <div class="admin-content">
+        <header class="admin-header">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="admin-user-info">
+                        <span>Welcome, @context.User.Identity?.Name</span>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="admin-user-info">
+                        <span>Not authenticated</span>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+        </header>
+        <main class="admin-main">
+            @Body
+        </main>
+    </div>
+</div>
+
+<style>
+    .admin-layout {
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .admin-sidebar {
+        width: 250px;
+        background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+
+    .admin-brand {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .admin-brand h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .admin-nav {
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
+    }
+
+    .admin-nav-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .admin-nav-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+    .admin-nav-link.active {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        font-weight: 500;
+    }
+
+    .nav-icon {
+        margin-right: 0.75rem;
+        font-size: 1.2rem;
+    }
+
+    .nav-divider {
+        border: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 1rem 0;
+    }
+
+    .admin-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .admin-header {
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-user-info {
+        color: #374151;
+        font-size: 0.9rem;
+    }
+
+    .admin-main {
+        flex: 1;
+        padding: 2rem;
+        overflow-y: auto;
+        background: #f9fafb;
+    }
+</style>
