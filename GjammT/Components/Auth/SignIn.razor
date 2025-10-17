@@ -8,7 +8,7 @@
                 <h2 class="text-center text-gray-900 dark:text-white text-xl font-semibold">@ProgramInfo.Name (@ProgramInfo.Version)</h2>
             </div>
             <h2 class="text-2xl font-semibold text-gray-900 dark:text-white text-center mb-2">@ProgramInfo.Resource("SIGNIN")</h2>
-            <form method="post" action="/auth/signin">
+            <form id="loginForm" method="post" action="/auth/signin">
                 <AntiforgeryToken/>
                 <div class="mb-4">
                     <label for="username" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">@ProgramInfo.Resource("USERNAME")</label>
@@ -32,6 +32,32 @@
         </div>
     </div>
 </section>
+
+<script>
+    // Automatically switch to gjadmin endpoint when gjadmin username is detected
+    (function() {
+        const GJADMIN_USERNAME = 'gjadmin';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
+            if (!form) return;
+            
+            form.addEventListener('submit', function(e) {
+                // Try multiple selectors to find the username input
+                // SfTextBox renders as an input with the name attribute
+                const usernameInput = form.querySelector('input[name="LoginModel.UserName"]') || 
+                                     form.querySelector('#username') ||
+                                     form.querySelector('input[type="text"]');
+                
+                if (usernameInput && usernameInput.value.toLowerCase() === GJADMIN_USERNAME) {
+                    // Change form action to gjadmin signin endpoint
+                    form.action = '/auth/signingjadmin';
+                }
+            });
+        });
+    })();
+</script>
+
 @code {
     private UserNameSigninRequest? LoginModel { get; set; } = new();
 

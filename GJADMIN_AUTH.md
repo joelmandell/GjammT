@@ -29,7 +29,22 @@ The admin credentials are configured in `appsettings.json`:
 
 ### Signing In
 
-To sign in as GjAdmin, make a POST request to:
+There are two ways to sign in as GjAdmin:
+
+#### 1. Using the Login Component (Recommended)
+
+The standard login component at the root of the application (`/`) automatically detects when the username "gjadmin" is entered and routes the login request to the gjadmin endpoint. Simply:
+
+1. Navigate to the application root
+2. Enter username: `gjadmin`
+3. Enter the configured password
+4. Submit the form
+
+The component will automatically POST to `/Auth/SignInGjAdmin` instead of the regular `/Auth/SignIn` endpoint.
+
+#### 2. Direct API Call
+
+You can also make a direct POST request to:
 
 ```
 POST /Auth/SignInGjAdmin
@@ -70,16 +85,20 @@ All routes under `/gjadmin/*` require authentication via the `[Authorize]` attri
 2. **ILoginService.GjAdminSignIn()** - Interface method for admin authentication
 3. **LoginService.GjAdminSignIn()** - Implementation that validates credentials against configuration
 4. **AuthController.SignInGjAdmin()** - API endpoint for admin signin
+5. **SignIn.razor** - Login component with intelligent routing based on username
 
 ### Authentication Flow
 
 ```
-1. Client sends POST to /Auth/SignInGjAdmin with credentials
-2. AuthController calls ILoginService.GjAdminSignIn()
-3. LoginService validates username and password against GjAdminSettings
-4. If valid, creates ClaimsPrincipal with Name and Role claims
-5. Signs in user with cookie authentication
-6. Redirects to /gjadmin
+1. User enters credentials in SignIn.razor component
+2. JavaScript detects if username is "gjadmin" (case-insensitive)
+3. Form action is automatically changed to /Auth/SignInGjAdmin
+4. Form submits credentials to appropriate endpoint
+5. AuthController calls ILoginService.GjAdminSignIn()
+6. LoginService validates username and password against GjAdminSettings
+7. If valid, creates ClaimsPrincipal with Name and Role claims
+8. Signs in user with cookie authentication
+9. Redirects to /gjadmin
 ```
 
 ### Differences from Regular Signin
