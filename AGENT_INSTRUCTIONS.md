@@ -2,7 +2,8 @@
 
 **Creation Date**: 2025-10-17 20:33:55 UTC  
 **Target Branch**: auth (or as specified by user)  
-**Last Updated**: 2025-10-17 20:33:55 UTC
+**Last Updated**: 2025-10-17 20:36:00 UTC  
+**Base Commit**: 12da74e - Add admin interface components and AGENT_INSTRUCTIONS.md
 
 ## Purpose
 This document provides guidelines for AI agents working on the GjammT booking system. It should be used to maintain consistency and understand the architectural decisions made during development.
@@ -16,6 +17,11 @@ git log --oneline --graph --decorate
 To see changes specific to the admin interface:
 ```bash
 git log --oneline --grep="admin\|Admin" --all
+```
+
+To trace back from the current commit (12da74e):
+```bash
+git log 12da74e..HEAD --oneline
 ```
 
 ## Architecture Overview
@@ -232,4 +238,10 @@ When implementing the booking system, consider:
 - [Architecture Diagrams](ARCHITECTURE_DIAGRAMS.md)
 
 ## Version History
-- **2025-10-17**: Initial creation with admin interface guidelines
+- **2025-10-17 20:36:00 UTC** (commit 12da74e): Added commit traceability information
+- **2025-10-17 20:33:55 UTC** (commit 12da74e): Initial creation with admin interface guidelines and complete CRUD pages for:
+  - Tenants (ClientCustomer management)
+  - Users (Global user management)
+  - Customers (Tenant-specific customer management)
+  - Roles (Role definition and management)
+  - Permissions (Permission group management)
