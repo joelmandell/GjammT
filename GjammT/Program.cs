@@ -32,6 +32,7 @@ builder.Services.AddRateLimiter(options =>
 
 
 // Add services to the container.
+builder.Services.Configure<GjAdminSettings>(builder.Configuration.GetSection("GjAdmin"));
 builder.Services.AddSingleton<ILoginService, LoginService>();
 builder.Services.AddSingleton<ProgramInfo>();
 

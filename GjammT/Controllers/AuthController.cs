@@ -51,6 +51,26 @@ public class AuthController : ControllerBase
 
         return Unauthorized();
     }
+
+    [HttpPost]
+    public async Task<IActionResult> SignInGjAdmin(UserNameSigninRequest loginModel, [FromServices] ILoginService loginService)
+    {
+        if(await loginService.GjAdminSignIn(loginModel)) {
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, loginModel.UserName),
+                new Claim(ClaimTypes.Role, "GjAdmin"),
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await (HttpContext?.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal) ?? Task.CompletedTask);
+            return Redirect("/gjadmin");
+        }
+
+        return Unauthorized();
+    }
     
     [HttpGet]
     public async Task<IActionResult> SignOut()
