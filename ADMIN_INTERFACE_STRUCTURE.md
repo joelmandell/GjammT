@@ -176,4 +176,13 @@ Configuration Changes:
 
 - **5d27f25**: Initial plan
 - **12da74e**: Add admin interface components and AGENT_INSTRUCTIONS.md
-- **e59ac44**: Add admin interface documentation and update AGENT_INSTRUCTIONS (current)
+- **e59ac44**: Add admin interface documentation and update AGENT_INSTRUCTIONS
+- **0028f3f**: Add admin interface structure documentation (current)
+
+## Notes for Future Development
+
+- Commit messages follow the pattern: "Add/Update [what was changed]"
+- For feature commits, consider using: "feat: [feature description]" format
+- All code follows existing patterns in the repository
+- AppDbContext is the correct DbContext class name
+- Microsoft.EntityFrameworkCore is the correct namespace (with capital 'F')
