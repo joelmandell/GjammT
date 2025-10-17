@@ -1,4 +1,5 @@
 @page "/gjadmin/customers"
+@using GjammT.Components.Layout
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @layout AdminLayout
@@ -150,7 +151,7 @@
 @code {
     private List<Customer> customers = new();
     private List<ClientCustomer> tenants = new();
-    private Customer currentCustomer = new();
+    private Customer currentCustomer = new() {Name=""};
     private Customer? customerToDelete;
     private bool showDialog = false;
     private bool showDeleteDialog = false;

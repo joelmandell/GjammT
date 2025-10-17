@@ -1,3 +1,4 @@
+using GjammT.Models;
 using GjammT.Models.Base;
 using GjammT.Models.CustomerRegister;
 using GjammT.Models.Data;

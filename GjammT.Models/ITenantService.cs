@@ -1,4 +1,4 @@
-namespace GjammT.SharedKernel;
+namespace GjammT.Models;
 
 /// <summary>
 /// Service to manage the current tenant context in a multi-tenant application

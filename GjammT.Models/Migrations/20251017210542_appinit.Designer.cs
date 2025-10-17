@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GjammT.Models.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250701160225_250701")]
-    partial class _250701
+    [Migration("20251017210542_appinit")]
+    partial class appinit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -41,7 +41,34 @@ namespace GjammT.Models.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ClientCustomer");
+                    b.ToTable("ClientCustomers");
+                });
+
+            modelBuilder.Entity("GjammT.Models.Base.CustomerTenant", b =>
+                {
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ClientCustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("SoftDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("CustomerId", "ClientCustomerId");
+
+                    b.HasIndex("ClientCustomerId");
+
+                    b.ToTable("CustomerTenants");
                 });
 
             modelBuilder.Entity("GjammT.Models.Base.Role", b =>
@@ -203,6 +230,9 @@ namespace GjammT.Models.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("ClientCustomerId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -227,6 +257,8 @@ namespace GjammT.Models.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClientCustomerId");
 
                     b.ToTable("Customers");
                 });
@@ -308,6 +340,25 @@ namespace GjammT.Models.Migrations
                     b.ToTable("PermissionGroups");
                 });
 
+            modelBuilder.Entity("GjammT.Models.Base.CustomerTenant", b =>
+                {
+                    b.HasOne("GjammT.Models.Base.ClientCustomer", "ClientCustomer")
+                        .WithMany("Customers")
+                        .HasForeignKey("ClientCustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GjammT.Models.CustomerRegister.Customer", "Customer")
+                        .WithMany("Tenants")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClientCustomer");
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("GjammT.Models.Base.RolePermission", b =>
                 {
                     b.HasOne("PermissionGroup", "PermissionGroup")
@@ -373,6 +424,22 @@ namespace GjammT.Models.Migrations
                     b.Navigation("ClientCustomer");
                 });
 
+            modelBuilder.Entity("GjammT.Models.CustomerRegister.Customer", b =>
+                {
+                    b.HasOne("GjammT.Models.Base.ClientCustomer", "ClientCustomer")
+                        .WithMany()
+                        .HasForeignKey("ClientCustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClientCustomer");
+                });
+
+            modelBuilder.Entity("GjammT.Models.Base.ClientCustomer", b =>
+                {
+                    b.Navigation("Customers");
+                });
+
             modelBuilder.Entity("GjammT.Models.Base.Role", b =>
                 {
                     b.Navigation("Permissions");
@@ -381,6 +448,8 @@ namespace GjammT.Models.Migrations
             modelBuilder.Entity("GjammT.Models.CustomerRegister.Customer", b =>
                 {
                     b.Navigation("Addresses");
+
+                    b.Navigation("Tenants");
 
                     b.Navigation("UserRoles");
                 });

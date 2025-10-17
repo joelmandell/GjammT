@@ -1,4 +1,3 @@
-using GjammT.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 
 namespace GjammT.Models.Data;

@@ -1,3 +1,5 @@
+using GjammT.Models;
+
 namespace GjammT.SharedKernel;
 
 /// <summary>
