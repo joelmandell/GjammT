@@ -15,7 +15,7 @@ public class User : BaseEntity
     public bool IsActive { get; set; } = true;
     public UserRole Role { get; set; } = UserRole.Private;
     public List<Address> Addresses { get; set; } = new();
-    public string PasswordResetToken { get; set; }
-    public DateTime? ResetTokenExpiry { get; set; }= DateTime.MinValue.ToUniversalTime();
+    public string? PasswordResetToken { get; set; }
+    public DateTime? ResetTokenExpiry { get; set; }
     public ICollection<UserCustomerRole> CustomerRoles { get; set; } = new List<UserCustomerRole>();
 }
