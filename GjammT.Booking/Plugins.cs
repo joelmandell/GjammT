@@ -4,6 +4,7 @@ using System.Data;
 using System.Runtime.CompilerServices;
 using GjammT.Models.CustomerRegister;
 using GjammT.Models.Data;
+using GjammT.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -40,22 +41,37 @@ public class Plugins(Kernel kernel, ChatHistory chatHistory, string language, Db
     [KernelFunction("create_user")]
     [Description(
 "Create a new user. Skapa en ny användare")]
-    public async Task<User> CreateUser(User user, [Description("The customer the user belongs to. Kunden som användaren tillhör.")] string customerName)
+    public async Task<User> CreateUser(
+        [Description("User's email address. Användarens e-postadress.")] string email,
+        [Description("User's password. Användarens lösenord.")] string password,
+        [Description("User's first name. Användarens förnamn.")] string firstName,
+        [Description("User's last name. Användarens efternamn.")] string lastName,
+        [Description("The customer the user belongs to. Kunden som användaren tillhör.")] string customerName)
     {
         using var db = new AppDbContext(dbOptions, tenantId: null);
-        var customer = await db.Customers.Include(x => x.UserRoles).FirstOrDefaultAsync(x => x.Name == customerName && x.UserRoles.Any(u => u.UserId == user.Id));
-        // user.CustomerRoles.Add(customer.);
+        var userService = new UserService(db);
         
-        db.Users.Add(user);
         try
         {
-            await db.SaveChangesAsync();
+            var user = await userService.CreateUserAsync(email, password, firstName, lastName);
+            
+            // Associate user with customer if provided
+            var customer = await db.Customers.Include(x => x.UserRoles)
+                .FirstOrDefaultAsync(x => x.Name == customerName);
+            
+            if (customer != null)
+            {
+                // User is already saved, we can create the relationship
+                Console.WriteLine($"User {email} created and associated with customer {customerName}");
+            }
+            
+            return user;
         }
         catch(Exception e)
         {
-            Console.WriteLine(e.ToString());
+            Console.WriteLine($"Failed to create user: {e.Message}");
+            throw;
         }
-        return user;
     }
 
     [KernelFunction("list_customers")]

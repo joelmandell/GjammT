@@ -74,22 +74,13 @@ public class MultiTenantExampleService
     /// <summary>
     /// Example 3: Creating a global user (not tenant-specific)
     /// </summary>
-    public async Task<User> CreateGlobalUserExample(string email, string firstName, string lastName)
+    public async Task<User> CreateGlobalUserExample(string email, string password, string firstName, string lastName)
     {
         // Users are global - no tenant filtering needed
         using var context = new AppDbContext(_options, tenantId: null);
+        var userService = new UserService(context);
         
-        var user = new User
-        {
-            Email = email,
-            FirstName = firstName,
-            LastName = lastName,
-            IsActive = true,
-            Password = "hashed_password_here" // In reality, hash the password
-        };
-        
-        context.Users.Add(user);
-        await context.SaveChangesAsync();
+        var user = await userService.CreateUserAsync(email, password, firstName, lastName);
         
         return user;
     }
@@ -189,7 +180,7 @@ public class MultiTenantExampleService
         var tenantB = await CreateTenantExample("Company B", "companyb");
         
         // Step 2: Create a user (global)
-        var user = await CreateGlobalUserExample("john@example.com", "John", "Doe");
+        var user = await CreateGlobalUserExample("john@example.com", "SecurePassword123!", "John", "Doe");
         
         // Step 3: Create a role (would normally be done once during setup)
         Guid adminRoleId;

@@ -295,7 +295,6 @@ namespace GjammT.Models.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("PasswordResetToken")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
