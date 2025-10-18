@@ -9,6 +9,7 @@
         <Nullable>enable</Nullable>
         <UserSecretsId>49a31344-74b8-4692-8f4a-c02079aee1f7</UserSecretsId>
         <RootNamespace>AppHost</RootNamespace>
+        <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

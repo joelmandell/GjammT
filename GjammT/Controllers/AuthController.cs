@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GjammT.Controllers;
 
-[Microsoft.AspNetCore.Mvc.Route("[controller]/[action]")]
 public class AuthController : ControllerBase
 {
     public AuthController()
@@ -31,10 +30,24 @@ public class AuthController : ControllerBase
     }
     
     [HttpPost]
-    public async Task<IActionResult> SignIn(UserNameSigninRequest loginModel, [FromServices] ILoginService loginService)
+    [Route("/auth/signin")]
+    public async Task<IActionResult> SignIn([FromForm] UserNameSigninRequest loginModel, [FromServices] ILoginService loginService)
     {
+        if(await loginService.GjAdminSignIn(loginModel)) {
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, loginModel.UserName),
+                new Claim(ClaimTypes.Role, "GjAdmin"),
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await (HttpContext?.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal) ?? Task.CompletedTask);
+            return Redirect("/gjadmin");
+        }
         var tenant = GetSubdomain(Request.Host.Host);
-        
+
         ArgumentNullException.ThrowIfNull(tenant);
         if(await loginService.UserNameSignIn(loginModel)) {
             var claims = new[]
@@ -53,22 +66,10 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> SignInGjAdmin(UserNameSigninRequest loginModel, [FromServices] ILoginService loginService)
+    [Route("/auth/login")]
+    public async Task<IActionResult> Login(UserNameSigninRequest loginModel, [FromServices] ILoginService loginService)
     {
-        if(await loginService.GjAdminSignIn(loginModel)) {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.Name, loginModel.UserName),
-                new Claim(ClaimTypes.Role, "GjAdmin"),
-            };
-
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
-
-            await (HttpContext?.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal) ?? Task.CompletedTask);
-            return Redirect("/gjadmin");
-        }
-
+        
         return Unauthorized();
     }
     

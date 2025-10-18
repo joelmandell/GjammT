@@ -34,28 +34,7 @@
 </section>
 
 <script>
-    // Automatically switch to gjadmin endpoint when gjadmin username is detected
-    (function() {
-        const GJADMIN_USERNAME = 'gjadmin';
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('loginForm');
-            if (!form) return;
-            
-            form.addEventListener('submit', function(e) {
-                // Try multiple selectors to find the username input
-                // SfTextBox renders as an input with the name attribute
-                const usernameInput = form.querySelector('input[name="LoginModel.UserName"]') || 
-                                     form.querySelector('#username') ||
-                                     form.querySelector('input[type="text"]');
-                
-                if (usernameInput && usernameInput.value.toLowerCase() === GJADMIN_USERNAME) {
-                    // Change form action to gjadmin signin endpoint
-                    form.action = '/auth/signingjadmin';
-                }
-            });
-        });
-    })();
+    
 </script>
 
 @code {
