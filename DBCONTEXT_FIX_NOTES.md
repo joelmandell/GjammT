@@ -12,12 +12,13 @@ This caused an `InvalidOperationException` when the DI container tried to resolv
 The fix removes the ambiguity by:
 1. **Removing** the parameterless constructor (used only in legacy code)
 2. **Removing** the 2-parameter constructor with only `DbContextOptions`
-3. **Keeping** only the 3-parameter constructor: `AppDbContext(DbContextOptions<AppDbContext> options, Guid? tenantId)`
+3. **Keeping** only the 3-parameter constructor with an explicit default value: `AppDbContext(DbContextOptions<AppDbContext> options, Guid? tenantId = null)`
 
 This single constructor:
-- Is unambiguous for the DI container
-- Works with `IDbContextFactory<AppDbContext>` - EF Core's factory will pass `null` for the `tenantId` parameter
-- Supports explicit tenant-aware instantiation when needed
+- Is unambiguous for the DI container (only one constructor)
+- Has an explicit default value for `tenantId`, allowing `IDbContextFactory<AppDbContext>` to create instances with just `DbContextOptions`
+- Works with `IDbContextFactory<AppDbContext>` - EF Core's factory can call it with just the options parameter
+- Supports explicit tenant-aware instantiation when needed: `new AppDbContext(options, specificTenantId)`
 - Works with the custom `AppDbContextFactory` for tenant-specific contexts
 
 ## Changes Made
@@ -45,7 +46,12 @@ To verify the fix works:
 ## Technical Details
 The `AddDbContextFactory<AppDbContext>()` registration in Program.cs creates a factory that:
 - Resolves `DbContextOptions<AppDbContext>` from DI (configured by `AddDbContextFactory`)
-- Passes `null` for non-service parameters like `Guid? tenantId` (the default for nullable types)
+- Can omit the `tenantId` parameter since it has a default value of `null`
 - Creates `AppDbContext` instances with tenant filtering disabled (null tenant)
+
+The constructor signature `AppDbContext(DbContextOptions<AppDbContext> options, Guid? tenantId = null)` allows:
+1. Factory creation: `factory.CreateDbContext()` → calls constructor with just options
+2. Explicit tenant: `new AppDbContext(options, tenantId)` → calls constructor with specific tenant
+3. No ambiguity: Only one constructor exists
 
 For tenant-aware operations, code should use the custom `AppDbContextFactory` which properly handles tenant context.

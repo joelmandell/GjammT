@@ -9,7 +9,8 @@ public class AppDbContext : DbContext
 {
     private readonly Guid? _tenantId;
     
-    public AppDbContext(DbContextOptions<AppDbContext> options, Guid? tenantId) : base(options)
+    // Constructor with explicit default for tenantId to work with IDbContextFactory
+    public AppDbContext(DbContextOptions<AppDbContext> options, Guid? tenantId = null) : base(options)
     {
         _tenantId = tenantId;
     }
