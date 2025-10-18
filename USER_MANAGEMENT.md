@@ -44,7 +44,10 @@ var user = await userService.CreateUserAsync(
 
 ```csharp
 var user = await userService.GetUserByEmailAsync("user@example.com");
-bool isValid = userService.VerifyPassword(user, "password-to-check");
+if (user != null)
+{
+    bool isValid = userService.VerifyPassword(user, "password-to-check");
+}
 ```
 
 ### Updating a Password
@@ -114,7 +117,13 @@ A migration has been created to make the `PasswordResetToken` column nullable:
 - File: `20251018195000_MakePasswordResetTokenNullable.cs`
 - This fixes the NOT NULL constraint violation when creating users
 
-To apply the migration:
+To apply the migration, run from the GjammT.Models directory:
+```bash
+cd GjammT.Models
+dotnet ef database update --connection "Server=localhost;Port=5432;Database=postgres;User Id=<username>;"
+```
+
+Or configure your connection string in appsettings.json and run:
 ```bash
 cd GjammT.Models
 dotnet ef database update
