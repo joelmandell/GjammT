@@ -8,15 +8,6 @@ namespace GjammT.Models.Data;
 public class AppDbContext : DbContext
 {
     private readonly Guid? _tenantId;
-
-    public AppDbContext()
-    {
-    }
-    
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-    {
-        
-    }
     
     public AppDbContext(DbContextOptions<AppDbContext> options, Guid? tenantId) : base(options)
     {
