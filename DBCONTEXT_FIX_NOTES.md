@@ -12,7 +12,7 @@ This caused an `InvalidOperationException` when the DI container tried to resolv
 The fix removes the ambiguity by:
 1. **Removing** the parameterless constructor (used only in legacy code)
 2. **Removing** the 2-parameter constructor with only `DbContextOptions`
-3. **Keeping** only the 3-parameter constructor with an explicit default value: `AppDbContext(DbContextOptions<AppDbContext> options, Guid? tenantId = null)`
+3. **Keeping** only the constructor with both parameters and an explicit default value: `AppDbContext(DbContextOptions<AppDbContext> options, Guid? tenantId = null)`
 
 This single constructor:
 - Is unambiguous for the DI container (only one constructor)
