@@ -5,6 +5,7 @@
 @layout AdminLayout
 @using GjammT.Models.CustomerRegister
 @using GjammT.Models.Data
+@using GjammT.SharedKernel
 @inject IDbContextFactory<AppDbContext> ContextFactory
 
 <PageTitle>User Management - GjammT Admin</PageTitle>
@@ -276,14 +277,33 @@
                     existing.IsActive = currentUser.IsActive;
                     existing.Role = currentUser.Role;
                 }
+                await context.SaveChangesAsync();
             }
             else
             {
-                currentUser.Id = Guid.NewGuid();
-                await context.Users.AddAsync(currentUser);
+                // Use UserService to create user with hashed password
+                var userService = new UserService(context);
+                var createdUser = await userService.CreateUserAsync(
+                    email: currentUser.Email,
+                    password: currentUser.Password,
+                    firstName: currentUser.FirstName,
+                    lastName: currentUser.LastName,
+                    phoneNumber: currentUser.PhoneNumber,
+                    dateOfBirth: currentUser.DateOfBirth
+                );
+                
+                // Update additional fields if needed
+                if (currentUser.Role != UserRole.Private || !currentUser.IsActive)
+                {
+                    var user = await context.Users.FindAsync(createdUser.Id);
+                    if (user != null)
+                    {
+                        user.Role = currentUser.Role;
+                        user.IsActive = currentUser.IsActive;
+                        await context.SaveChangesAsync();
+                    }
+                }
             }
-
-            await context.SaveChangesAsync();
             await LoadUsers();
             CloseDialog();
         }
