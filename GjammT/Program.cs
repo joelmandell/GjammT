@@ -33,7 +33,9 @@ builder.Services.AddRateLimiter(options =>
 
 // Add services to the container.
 builder.Services.Configure<GjAdminSettings>(builder.Configuration.GetSection("GjAdmin"));
-builder.Services.AddSingleton<ILoginService, LoginService>();
+builder.Services.AddScoped<ILoginService, LoginService>();
+builder.Services.AddScoped<UserService>();
+
 builder.Services.AddSingleton<ProgramInfo>();
 
 // Register DbContext factory for admin pages
