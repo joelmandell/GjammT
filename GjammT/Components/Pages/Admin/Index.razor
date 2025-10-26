@@ -55,6 +55,15 @@
                 <a href="/gjadmin/permissions" class="card-link">Manage Permissions →</a>
             </div>
         </div>
+
+        <div class="dashboard-card">
+            <div class="card-icon">👤🔑</div>
+            <div class="card-content">
+                <h3>User Permissions</h3>
+                <p>Assign user-level permissions</p>
+                <a href="/gjadmin/userpermissions" class="card-link">Manage User Permissions →</a>
+            </div>
+        </div>
     </div>
 
     <div class="info-section">
@@ -73,7 +82,14 @@
 
             <h3>Permission System</h3>
             <p>
-                The permission system uses a bitwise flags approach:
+                The permission system uses a hierarchical approach with two levels:
+            </p>
+            <ul>
+                <li><strong>Role-Based Permissions</strong> - Default permissions inherited from user roles</li>
+                <li><strong>User-Level Permissions</strong> - Direct permissions assigned to specific users for particular customers or tenants (overrides role permissions)</li>
+            </ul>
+            <p>
+                Both levels use bitwise flags for granular control:
             </p>
             <ul>
                 <li><strong>CanRead</strong> - View data</li>
@@ -82,8 +98,9 @@
                 <li><strong>CanDelete</strong> - Delete records</li>
             </ul>
             <p>
-                Roles are assigned permission groups with specific allowed actions. This allows for flexible,
-                granular control over what users can do within the system.
+                User-level permissions can be assigned at three scopes: customer-level (most specific), 
+                tenant-level, or globally, providing fine-grained access control when role-based permissions 
+                are not sufficient.
             </p>
         </div>
     </div>
