@@ -7,10 +7,10 @@ These tests verify the user-level permission system works correctly with custome
 ### Prerequisites
 - Database with UserPermissions table migrated
 - Sample data:
-  - User: John Doe (ID: user-123)
-  - Tenant: City of Springfield (ID: tenant-456)
-  - Customer: ACME Corp (ID: customer-789, belongs to tenant-456)
-  - Permission Group: Invoices (ID: pg-001)
+  - User: John Doe (ID: "user-123")
+  - Tenant: City of Springfield (ID: "tenant-456")
+  - Customer: ACME Corp (ID: "customer-789", belongs to "tenant-456")
+  - Permission Group: Invoices (ID: "pg-001")
 
 ## Test Cases
 
@@ -356,13 +356,13 @@ WHERE tablename = 'UserPermissions';
 ## Success Criteria
 
 All tests pass when:
-1. ✅ User permissions override role permissions correctly
-2. ✅ System falls back to role permissions when no user permission exists
-3. ✅ Customer-level, tenant-level, and global scopes work as expected
-4. ✅ CRUD operations in admin UI function correctly
-5. ✅ Filters work and show correct results
-6. ✅ Bitwise permission flags operate correctly
-7. ✅ Database migration applies without errors
-8. ✅ Authorization checks are performant
-9. ✅ Security measures are in place (authentication required)
-10. ✅ Documentation is complete and accurate
+1. - [ ] User permissions override role permissions correctly
+2. - [ ] System falls back to role permissions when no user permission exists
+3. - [ ] Customer-level, tenant-level, and global scopes work as expected
+4. - [ ] CRUD operations in admin UI function correctly
+5. - [ ] Filters work and show correct results
+6. - [ ] Bitwise permission flags operate correctly
+7. - [ ] Database migration applies without errors
+8. - [ ] Authorization checks are performant
+9. - [ ] Security measures are in place (authentication required)
+10. - [ ] Documentation is complete and accurate
