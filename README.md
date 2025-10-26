@@ -40,7 +40,7 @@ The name **GjammT** honors the FRI development team at Idavall Data AB between 2
 | Framework      | ASP.NET Core                              |
 | Database       | PostgreSQL with EF Core                   |
 | Architecture   | Multi-Tenant with Shared Authorization    |
-| Authentication | User-based with Role Permissions          |
+| Authentication | User-based with Hierarchical Permissions  |
 
 ## Multi-Tenant Architecture
 
@@ -49,6 +49,7 @@ GjammT implements a sophisticated multi-tenant architecture that allows:
 - ✅ Centralized authorization and user role logic across all tenants
 - ✅ Users to work for multiple tenants simultaneously with different roles
 - ✅ Automatic data isolation per tenant with global user management
+- ✅ Fine-grained user-level permissions linked to customers or tenants
 
 ### Documentation
 
@@ -57,6 +58,7 @@ GjammT implements a sophisticated multi-tenant architecture that allows:
 - 📖 **[Usage Examples](MULTI_TENANT_USAGE.md)** - Code examples and best practices
 - 📖 **[Implementation Guide](IMPLEMENTATION_GUIDE.md)** - Setup and migration guide
 - 📊 **[Architecture Diagrams](ARCHITECTURE_DIAGRAMS.md)** - Visual diagrams and flows
+- 🔐 **[User Permissions Guide](USER_PERMISSIONS.md)** - User-level permission system documentation
 
 ### Key Features
 
@@ -64,6 +66,7 @@ GjammT implements a sophisticated multi-tenant architecture that allows:
 - Users - Single identity across all tenants
 - Roles - Defined once, used by all tenants
 - Permissions - Centralized permission management
+- User Permissions - Direct permission assignments to users for specific customers/tenants
 
 **Tenant-Specific Entities:**
 - Customers - Isolated per tenant
@@ -71,6 +74,10 @@ GjammT implements a sophisticated multi-tenant architecture that allows:
 
 **Cross-Tenant Bridge:**
 - UserCustomerRole - Links users to customers with specific roles across tenants
+
+**Permission Hierarchy:**
+- User-Level Permissions (highest priority) - Direct assignments that override role permissions
+- Role-Based Permissions (default) - Permissions inherited from user roles
 
 For implementation details, see [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md).
 
