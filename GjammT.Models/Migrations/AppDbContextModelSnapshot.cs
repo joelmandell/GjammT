@@ -152,6 +152,52 @@ namespace GjammT.Models.Migrations
                     b.ToTable("UserCustomerRoles");
                 });
 
+            modelBuilder.Entity("GjammT.Models.Base.UserPermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AllowedActions")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ClientCustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("PermissionGroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("SoftDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientCustomerId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("PermissionGroupId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserPermissions");
+                });
+
             modelBuilder.Entity("GjammT.Models.CustomerRegister.Address", b =>
                 {
                     b.Property<Guid>("Id")
@@ -397,6 +443,37 @@ namespace GjammT.Models.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GjammT.Models.Base.UserPermission", b =>
+                {
+                    b.HasOne("GjammT.Models.Base.ClientCustomer", "ClientCustomer")
+                        .WithMany()
+                        .HasForeignKey("ClientCustomerId");
+
+                    b.HasOne("GjammT.Models.CustomerRegister.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId");
+
+                    b.HasOne("PermissionGroup", "PermissionGroup")
+                        .WithMany()
+                        .HasForeignKey("PermissionGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GjammT.Models.CustomerRegister.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClientCustomer");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("PermissionGroup");
 
                     b.Navigation("User");
                 });
