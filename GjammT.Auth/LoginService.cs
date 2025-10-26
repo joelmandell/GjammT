@@ -26,7 +26,7 @@ public class LoginService : ILoginService
         }
 
         // Verify password using BCrypt
-        return _userService.VerifyPassword(user, request.Password);
+        return await _userService.VerifyPasswordAsync(user, request.Password);
     }
 
     public async Task<bool> GjAdminSignIn(UserNameSigninRequest request)

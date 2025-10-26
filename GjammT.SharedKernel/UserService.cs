@@ -76,7 +76,7 @@ public class UserService
     /// <param name="user">The user to verify</param>
     /// <param name="password">Plain text password to verify</param>
     /// <returns>True if password is correct</returns>
-    public bool VerifyPassword(User user, string password)
+    public async Task<bool> VerifyPasswordAsync(User user, string password)
     {
         try
         {
@@ -87,17 +87,35 @@ public class UserService
         {
             // Password is not a valid BCrypt hash, check if it's a plaintext password
             // This should only happen for legacy users with plaintext passwords
-            if (user.Password == password)
+            // Use constant-time comparison to prevent timing attacks
+            if (System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
+                System.Text.Encoding.UTF8.GetBytes(user.Password),
+                System.Text.Encoding.UTF8.GetBytes(password)))
             {
                 // Password matches but is stored in plaintext
+                // Log this security event for audit purposes
+                Console.WriteLine($"WARNING: Legacy plaintext password detected for user {user.Email} - auto-upgrading to BCrypt hash");
+                
                 // Auto-upgrade to hashed password for security
                 user.Password = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
                 user.UpdatedAt = DateTime.UtcNow;
-                _context.SaveChangesAsync().Wait(); // Note: Synchronous wait in this context
+                await _context.SaveChangesAsync();
                 return true;
             }
             return false;
         }
+    }
+
+    /// <summary>
+    /// Verifies a password against a user's hashed password (synchronous version for backward compatibility)
+    /// </summary>
+    /// <param name="user">The user to verify</param>
+    /// <param name="password">Plain text password to verify</param>
+    /// <returns>True if password is correct</returns>
+    [Obsolete("Use VerifyPasswordAsync instead to avoid potential deadlocks")]
+    public bool VerifyPassword(User user, string password)
+    {
+        return VerifyPasswordAsync(user, password).GetAwaiter().GetResult();
     }
 
     /// <summary>
