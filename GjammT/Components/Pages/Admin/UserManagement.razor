@@ -289,20 +289,10 @@
                     firstName: currentUser.FirstName,
                     lastName: currentUser.LastName,
                     phoneNumber: currentUser.PhoneNumber,
-                    dateOfBirth: currentUser.DateOfBirth
+                    dateOfBirth: currentUser.DateOfBirth,
+                    role: currentUser.Role,
+                    isActive: currentUser.IsActive
                 );
-                
-                // Update additional fields if needed
-                if (currentUser.Role != UserRole.Private || !currentUser.IsActive)
-                {
-                    var user = await context.Users.FindAsync(createdUser.Id);
-                    if (user != null)
-                    {
-                        user.Role = currentUser.Role;
-                        user.IsActive = currentUser.IsActive;
-                        await context.SaveChangesAsync();
-                    }
-                }
             }
             await LoadUsers();
             CloseDialog();

@@ -26,6 +26,8 @@ public class UserService
     /// <param name="lastName">User's last name</param>
     /// <param name="phoneNumber">User's phone number (optional)</param>
     /// <param name="dateOfBirth">User's date of birth (optional)</param>
+    /// <param name="role">User's role (optional, defaults to Private)</param>
+    /// <param name="isActive">User's active status (optional, defaults to true)</param>
     /// <returns>Created user</returns>
     public async Task<User> CreateUserAsync(
         string email, 
@@ -33,7 +35,9 @@ public class UserService
         string firstName, 
         string lastName,
         string? phoneNumber = null,
-        DateTime? dateOfBirth = null)
+        DateTime? dateOfBirth = null,
+        UserRole role = UserRole.Private,
+        bool isActive = true)
     {
         // Check if user with email already exists
         var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
@@ -56,8 +60,8 @@ public class UserService
             DateOfBirth = dateOfBirth?.ToUniversalTime() ?? DateTime.MinValue.ToUniversalTime(),
             RegistrationDate = DateTime.UtcNow,
             IsEmailVerified = false,
-            IsActive = true,
-            Role = UserRole.Private,
+            IsActive = isActive,
+            Role = role,
             PasswordResetToken = null,
             ResetTokenExpiry = null,
             CreatedAt = DateTime.UtcNow,
