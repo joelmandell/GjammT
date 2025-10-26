@@ -41,6 +41,29 @@ public class AppDbContext : DbContext
             .WithMany() // A PermissionGroup can be in many RolePermissions, but we don't need a navigation property on PermissionGroup.
             .HasForeignKey(rp => rp.PermissionGroupId);
         
+        // 3a. Configure UserPermission relationships
+        modelBuilder.Entity<UserPermission>()
+            .HasOne(up => up.User)
+            .WithMany() // A User can have many UserPermissions
+            .HasForeignKey(up => up.UserId);
+
+        modelBuilder.Entity<UserPermission>()
+            .HasOne(up => up.PermissionGroup)
+            .WithMany() // A PermissionGroup can be in many UserPermissions
+            .HasForeignKey(up => up.PermissionGroupId);
+
+        modelBuilder.Entity<UserPermission>()
+            .HasOne(up => up.Customer)
+            .WithMany() // A Customer can have many UserPermissions
+            .HasForeignKey(up => up.CustomerId)
+            .IsRequired(false); // Optional relationship
+
+        modelBuilder.Entity<UserPermission>()
+            .HasOne(up => up.ClientCustomer)
+            .WithMany() // A ClientCustomer can have many UserPermissions
+            .HasForeignKey(up => up.ClientCustomerId)
+            .IsRequired(false); // Optional relationship
+        
         // 4. Configure the many-to-many relationship between Customer and ClientCustomer (tenant)
         // A customer can exist in multiple tenants, and a tenant can have multiple customers
         // Define composite primary key to prevent duplicate customer-tenant relationships
@@ -105,6 +128,7 @@ public class AppDbContext : DbContext
     
     public DbSet<PermissionGroup> PermissionGroups { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
+    public DbSet<UserPermission> UserPermissions { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<UserCustomerRole> UserCustomerRoles { get; set; }
     public DbSet<CustomerTenant> CustomerTenants { get; set; }
