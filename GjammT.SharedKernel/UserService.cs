@@ -42,8 +42,8 @@ public class UserService
             throw new InvalidOperationException($"User with email {email} already exists");
         }
 
-        // Hash the password using BCrypt
-        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password, BCrypt.Net.BCrypt.GenerateSalt(12));
+        // Hash the password using BCrypt with work factor of 12
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
 
         var user = new User
         {
@@ -76,9 +76,46 @@ public class UserService
     /// <param name="user">The user to verify</param>
     /// <param name="password">Plain text password to verify</param>
     /// <returns>True if password is correct</returns>
+    public async Task<bool> VerifyPasswordAsync(User user, string password)
+    {
+        try
+        {
+            // Try to verify as a BCrypt hash
+            return BCrypt.Net.BCrypt.Verify(password, user.Password);
+        }
+        catch (BCrypt.Net.SaltParseException)
+        {
+            // Password is not a valid BCrypt hash, check if it's a plaintext password
+            // This should only happen for legacy users with plaintext passwords
+            // Use constant-time comparison to prevent timing attacks
+            if (System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
+                System.Text.Encoding.UTF8.GetBytes(user.Password),
+                System.Text.Encoding.UTF8.GetBytes(password)))
+            {
+                // Password matches but is stored in plaintext
+                // Log this security event for audit purposes
+                Console.WriteLine($"WARNING: Legacy plaintext password detected for user {user.Email} - auto-upgrading to BCrypt hash");
+                
+                // Auto-upgrade to hashed password for security
+                user.Password = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
+                user.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Verifies a password against a user's hashed password (synchronous version for backward compatibility)
+    /// </summary>
+    /// <param name="user">The user to verify</param>
+    /// <param name="password">Plain text password to verify</param>
+    /// <returns>True if password is correct</returns>
+    [Obsolete("Use VerifyPasswordAsync instead to avoid potential deadlocks")]
     public bool VerifyPassword(User user, string password)
     {
-        return BCrypt.Net.BCrypt.Verify(password, user.Password);
+        return VerifyPasswordAsync(user, password).GetAwaiter().GetResult();
     }
 
     /// <summary>
@@ -95,8 +132,8 @@ public class UserService
             return false;
         }
 
-        // Hash the new password
-        user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, BCrypt.Net.BCrypt.GenerateSalt(12));
+        // Hash the new password with work factor of 12
+        user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
         user.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -149,8 +186,8 @@ public class UserService
             return false;
         }
 
-        // Hash the new password
-        user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, BCrypt.Net.BCrypt.GenerateSalt(12));
+        // Hash the new password with work factor of 12
+        user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
         user.PasswordResetToken = null;
         user.ResetTokenExpiry = null;
         user.UpdatedAt = DateTime.UtcNow;
