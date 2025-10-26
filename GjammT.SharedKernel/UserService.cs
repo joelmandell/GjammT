@@ -42,8 +42,8 @@ public class UserService
             throw new InvalidOperationException($"User with email {email} already exists");
         }
 
-        // Hash the password using BCrypt
-        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password, BCrypt.Net.BCrypt.GenerateSalt(12));
+        // Hash the password using BCrypt with work factor of 12
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
 
         var user = new User
         {
@@ -78,7 +78,26 @@ public class UserService
     /// <returns>True if password is correct</returns>
     public bool VerifyPassword(User user, string password)
     {
-        return BCrypt.Net.BCrypt.Verify(password, user.Password);
+        try
+        {
+            // Try to verify as a BCrypt hash
+            return BCrypt.Net.BCrypt.Verify(password, user.Password);
+        }
+        catch (BCrypt.Net.SaltParseException)
+        {
+            // Password is not a valid BCrypt hash, check if it's a plaintext password
+            // This should only happen for legacy users with plaintext passwords
+            if (user.Password == password)
+            {
+                // Password matches but is stored in plaintext
+                // Auto-upgrade to hashed password for security
+                user.Password = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
+                user.UpdatedAt = DateTime.UtcNow;
+                _context.SaveChangesAsync().Wait(); // Note: Synchronous wait in this context
+                return true;
+            }
+            return false;
+        }
     }
 
     /// <summary>
@@ -95,8 +114,8 @@ public class UserService
             return false;
         }
 
-        // Hash the new password
-        user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, BCrypt.Net.BCrypt.GenerateSalt(12));
+        // Hash the new password with work factor of 12
+        user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
         user.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -149,8 +168,8 @@ public class UserService
             return false;
         }
 
-        // Hash the new password
-        user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, BCrypt.Net.BCrypt.GenerateSalt(12));
+        // Hash the new password with work factor of 12
+        user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
         user.PasswordResetToken = null;
         user.ResetTokenExpiry = null;
         user.UpdatedAt = DateTime.UtcNow;
